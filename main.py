@@ -1,106 +1,132 @@
-# @brief
-# @date 10.06.18
-# @author Stoyan Lupov
-
-import pygame
 import sys
-import Knight
 
-# Constants
-SIZE = width, height = 800, 600
-FPS = 60
-SPEED = [10, 10]
-
-# Colors
-BLACK = (0, 0, 0)
-WHITE = (255, 255, 255)
-
-ball = pygame.image.load("resources/ball.png")
-ballRect = ball.get_rect()
-
-CLOCK = pygame.time.Clock()
-SCREEN = pygame.display.set_mode(SIZE)
-
-# Global variables
-shouldEnd = False
-color = BLACK
-
-players = pygame.sprite.Group()
-enemies = pygame.sprite.Group()
-all_sprites = pygame.sprite.Group()
-
-player = Knight
+from sprites import *
+from tilemap import *
 
 
-def init():
-    players.add(player)
-    all_sprites.add(player)
+# HUD functions
+def draw_player_health(surf, x, y, pct):
+    if pct < 0:
+        pct = 0
+
+    BAR_LENGTH = 100
+    BAR_HEIGHT = 20
+
+    fill = pct * BAR_LENGTH
+    outline_rect = pg.Rect(x, y, BAR_LENGTH, BAR_HEIGHT)
+    fill_rect = pg.Rect(x, y, fill, BAR_HEIGHT)
+
+    if pct > 0.6:
+        col = GREEN
+    elif pct > 0.3:
+        col = YELLOW
+    else:
+        col = RED
+
+    pg.draw.rect(surf, col, fill_rect)
+    pg.draw.rect(surf, WHITE, outline_rect, 2)
 
 
-def draw():
-    global ballRect
+class Engine:
+    def __init__(self):
+        pg.init()
+        self.screen = pg.display.set_mode((WIDTH, HEIGHT))
+        pg.display.set_caption(TITLE)
+        self.clock = pg.time.Clock()
+        self.load_data()
 
-    SCREEN.fill(color)
-    all_sprites.draw(SCREEN)
+    def load_data(self):
+        self.map = TiledMap(RESOURCE_FOLDER + '/maps/level1.tmx')
+        self.map_img = self.map.make_map()
+        self.map_rect = self.map_img.get_rect()
+        self.player_img = pg.image.load(PLAYER_IMG).convert_alpha()
+        self.bullet_img = pg.image.load(BULLET_IMG).convert_alpha()
 
-    # Draw ball to surface
-    SCREEN.blit(ball, ballRect)
+    def new(self):
+        # initialize all variables and do all the setup for a new game
+        self.all_sprites = pg.sprite.Group()
+        self.walls = pg.sprite.Group()
+        self.mobs = pg.sprite.Group()
+        self.bullets = pg.sprite.Group()
+        self.player = Player(self, 5, 5)
+        self.camera = Camera(self.map.width, self.map.height)
+
+    def run(self):
+        # game loop - set self.playing = False to end the game
+        self.running = True
+        while self.running:
+            self.dt = self.clock.tick(FPS) / 1000.0  # fix for Python 2.x
+            self.handle_event()
+            self.update()
+            self.draw()
+
+    def quit(self):
+        pg.quit()
+        sys.exit()
+
+    def update(self):
+        # update portion of the game loop
+        self.all_sprites.update()
+        self.camera.update(self.player)
+
+        # mobs hit player
+        hits = pg.sprite.spritecollide(self.player, self.mobs, False, collide_hit_rect)
+        for hit in hits:
+            self.player.health -= MOB_DAMAGE
+            hit.vel = vec(0, 0)
+            if self.player.health <= 0:
+                self.running = False
+
+        if hits:
+            self.player.pos += vec(MOB_KNOCKBACK, 0).rotate(-hits[0].rot)
+
+        # bullets hit mobs
+        hits = pg.sprite.groupcollide(self.mobs, self.bullets, False, True)
+
+        for hit in hits:
+            hit.health -= BULLET_DAMAGE
+            hit.vel = vec(0, 0)
+
+    def draw_grid(self):
+        for x in range(0, WIDTH, TILESIZE):
+            pg.draw.line(self.screen, LIGHTGREY, (x, 0), (x, HEIGHT))
+        for y in range(0, HEIGHT, TILESIZE):
+            pg.draw.line(self.screen, LIGHTGREY, (0, y), (WIDTH, y))
+
+    def draw(self):
+        pg.display.set_caption("{:.2f}".format(self.clock.get_fps()))
+        # self.screen.fill(BGCOLOR)
+        self.screen.blit(self.map_img, self.camera.apply_rect(self.map_rect))
+        # self.draw_grid()
+        for sprite in self.all_sprites:
+            if isinstance(sprite, Mob):
+                sprite.draw_health()
+            self.screen.blit(sprite.image, self.camera.apply(sprite))
+        # pg.draw.rect(self.screen, WHITE, self.player.hit_rect, 2)
+        # HUD functions
+        draw_player_health(self.screen, 10, 10, self.player.health / PLAYER_HEALTH)
+        pg.display.flip()
+
+    def handle_event(self):
+        # catch all events here
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                self.quit()
+            if event.type == pg.KEYDOWN:
+                if event.key == pg.K_ESCAPE:
+                    self.quit()
+
+    def show_start_screen(self):
+        pass
+
+    def show_go_screen(self):
+        pass
 
 
-def quit_game():
-    pygame.quit()
-    sys.exit()
-
-
-def update():
-    global ballRect
-
-    ballRect = ballRect.move(SPEED)
-    if ballRect.left < 0 or ballRect.right > width:
-        SPEED[0] = -SPEED[0]
-    if ballRect.top < 0 or ballRect.bottom > height:
-        SPEED[1] = -SPEED[1]
-
-    # Update the entire surface
-    pygame.display.update()
-
-
-def handle_event():
-    # Get any event that happened per frame
-    for event in pygame.event.get():
-        # Check if user wants to quit app
-        if event.type == pygame.QUIT:
-            quit_game()
-
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_LEFT:
-                return
-            elif event.key == pygame.K_RIGHT:
-                return
-
-        if event.type == pygame.KEYUP:
-            if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
-                return
-
-
-def main():
-    global shouldEnd
-
-    pygame.init()
-    pygame.display.set_caption('Our PyGame')
-
-    while not shouldEnd:
-        handle_event()
-        update()
-        draw()
-
-        # Set game max fps in order not to put much weight onto the CPU
-        CLOCK.tick(FPS)
-
-    # Deinit game
-    quit_game()
-
-
-# call the "main" function if running this script
-if __name__ == '__main__':
-    main()
+# create the game object
+engine = Engine()
+engine.show_start_screen()
+while True:
+    engine.new()
+    engine.run()
+    engine.show_go_screen()
