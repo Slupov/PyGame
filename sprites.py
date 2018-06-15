@@ -1,19 +1,8 @@
-import pygame as pg
 from random import uniform
+
 from settings import *
-from enum import Enum
 
 vec = pg.math.Vector2
-
-
-class SpriteState(Enum):
-    IDLE = 0,
-    WALK = 1,
-    RUN = 2,
-    ATTACK = 3,
-    JUMP = 4,
-    JUMP_ATTACK = 5,
-    DEAD = 6
 
 
 class SpriteEntity(pg.sprite.Sprite):
@@ -26,8 +15,12 @@ class SpriteEntity(pg.sprite.Sprite):
         self.state = SpriteState.IDLE
 
         self.images = {}
-        self.imageOriginal = pg.image.load(RESOURCE_FOLDER + "/knight/Idle (1).png").convert_alpha()
+        self.imageOriginal = pg.image.load(RESOURCE_FOLDER + "/knight/idle_(1).png").convert_alpha()
         self.image = None
+
+        # current frame of state animation
+        self.frameIdx = 0
+        self.last_frame_change = 0  # tick when last frame change happened
 
         self.rect = None
 
@@ -40,9 +33,15 @@ class SpriteEntity(pg.sprite.Sprite):
         # init images matrix - every row corresponds to a sprite state
         for name, member in SpriteState.__members__.items():
             self.images[name] = list()
+            for x in range(1, 11):
+                img = pg.image \
+                    .load(RESOURCE_FOLDER + "/knight/" + name.lower() + "_(" + str(x) + ").png").convert_alpha()
+                self.images[name].append(img)
 
     def setFrame(self, frame):
-        self.image = self.images[self.state.name][frame]
+        frame = frame % 10
+        self.frameIdx = frame
+        self.imageOriginal = self.images[self.state.name][frame]
 
     def setState(self, state):
         self.state = state
@@ -66,14 +65,22 @@ class Player(SpriteEntity):
 
         keys = pg.key.get_pressed()
         if keys[pg.K_LEFT] or keys[pg.K_a]:
-            self.rot = (self.rot - PLAYER_ROT_SPEED) % 360
-
-        if keys[pg.K_RIGHT] or keys[pg.K_d]:
             self.rot = (self.rot + PLAYER_ROT_SPEED) % 360
 
+        if keys[pg.K_RIGHT] or keys[pg.K_d]:
+            self.rot = (self.rot - PLAYER_ROT_SPEED) % 360
+
         if keys[pg.K_UP] or keys[pg.K_w]:
+            self.setState(SpriteState.WALK)
             self.vel = vec(PLAYER_SPEED, 0).rotate(-self.rot)
             self.image = pg.transform.scale(self.imageOriginal, (100, 100))
+
+            now = pg.time.get_ticks()
+            if now - self.last_frame_change > PLAYER_RATES[self.state]:
+                self.last_frame_change = now
+                self.frameIdx = (self.frameIdx + 1) % 10
+                self.setFrame(self.frameIdx)
+                self.image = self.imageOriginal
 
         if keys[pg.K_DOWN] or keys[pg.K_s]:
             self.vel = vec(-PLAYER_SPEED / 2, 0).rotate(-self.rot)
@@ -90,7 +97,8 @@ class Player(SpriteEntity):
 
     def update(self):
         self.get_keys()
-        self.image = pg.transform.rotate(pg.transform.scale(self.imageOriginal,(100,100)), self.rot)
+        self.image = pg.transform.rotate(pg.transform.scale(self.imageOriginal, (100, 100)), self.rot)
+        print(self.frameIdx)
         self.rect = self.image.get_rect()
         self.rect.center = self.pos
         self.pos += self.vel * self.game.dt
@@ -103,7 +111,7 @@ class Mob(pg.sprite.Sprite):
         self.image = game.mob_img
 
     def update(self):
-       pass
+        pass
 
     def draw_health(self):
         if self.health > 60:

@@ -1,6 +1,18 @@
 import pygame as pg
+from enum import Enum
 
 vec = pg.math.Vector2
+
+
+class SpriteState(Enum):
+    IDLE = 0,
+    WALK = 1,
+    RUN = 2,
+    ATTACK = 3,
+    JUMP = 4,
+    JUMPATTACK = 5,
+    DEAD = 6
+
 
 # define some colors (R, G, B)
 WHITE = (255, 255, 255)
@@ -33,6 +45,14 @@ PLAYER_ROT_SPEED = 2
 PLAYER_HIT_RECT = pg.Rect(0, 0, 35, 35)
 BARREL_OFFSET = vec(30, 10)
 
+PLAYER_RATES = {SpriteState.IDLE: 10,
+                SpriteState.WALK: 10,
+                SpriteState.RUN: 10,
+                SpriteState.ATTACK: 10,
+                SpriteState.JUMP: 10,
+                SpriteState.JUMPATTACK: 10,
+                SpriteState.DEAD: 10, }
+
 # Gun settings
 BULLET_IMG = RESOURCE_FOLDER + '/bullet.png'
 BULLET_SPEED = 500
@@ -49,3 +69,14 @@ MOB_HIT_RECT = pg.Rect(0, 0, 30, 30)
 MOB_HEALTH = 100
 MOB_DAMAGE = 10
 MOB_KNOCKBACK = 20
+
+MOB_WALK_RATE = 10
+MOB_RUN_RATE = 10
+
+MOB_RATES = {SpriteState.IDLE: 10,
+             SpriteState.WALK: 20,
+             SpriteState.RUN: 10,
+             SpriteState.ATTACK: 10,
+             SpriteState.JUMP: 10,
+             SpriteState.JUMPATTACK: 10,
+             SpriteState.DEAD: 10, }
