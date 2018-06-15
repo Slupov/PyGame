@@ -6,25 +6,25 @@ from tilemap import collide_hit_rect
 vec = pg.math.Vector2
 
 
-def collide_with_walls(sprite, group, dir):
-    if dir == 'x':
-        hits = pg.sprite.spritecollide(sprite, group, False, collide_hit_rect)
-        if hits:
-            if hits[0].rect.centerx > sprite.hit_rect.centerx:
-                sprite.pos.x = hits[0].rect.left - sprite.hit_rect.width / 2
-            if hits[0].rect.centerx < sprite.hit_rect.centerx:
-                sprite.pos.x = hits[0].rect.right + sprite.hit_rect.width / 2
-            sprite.vel.x = 0
-            sprite.hit_rect.centerx = sprite.pos.x
-    if dir == 'y':
-        hits = pg.sprite.spritecollide(sprite, group, False, collide_hit_rect)
-        if hits:
-            if hits[0].rect.centery > sprite.hit_rect.centery:
-                sprite.pos.y = hits[0].rect.top - sprite.hit_rect.height / 2
-            if hits[0].rect.centery < sprite.hit_rect.centery:
-                sprite.pos.y = hits[0].rect.bottom + sprite.hit_rect.height / 2
-            sprite.vel.y = 0
-            sprite.hit_rect.centery = sprite.pos.y
+# def collide_with_walls(sprite, group, dir):
+#     if dir == 'x':
+#         hits = pg.sprite.spritecollide(sprite, group, False, collide_hit_rect)
+#         if hits:
+#             if hits[0].rect.centerx > sprite.hit_rect.centerx:
+#                 sprite.pos.x = hits[0].rect.left - sprite.hit_rect.width / 2
+#             if hits[0].rect.centerx < sprite.hit_rect.centerx:
+#                 sprite.pos.x = hits[0].rect.right + sprite.hit_rect.width / 2
+#             sprite.vel.x = 0
+#             sprite.hit_rect.centerx = sprite.pos.x
+#     if dir == 'y':
+#         hits = pg.sprite.spritecollide(sprite, group, False, collide_hit_rect)
+#         if hits:
+#             if hits[0].rect.centery > sprite.hit_rect.centery:
+#                 sprite.pos.y = hits[0].rect.top - sprite.hit_rect.height / 2
+#             if hits[0].rect.centery < sprite.hit_rect.centery:
+#                 sprite.pos.y = hits[0].rect.bottom + sprite.hit_rect.height / 2
+#             sprite.vel.y = 0
+#             sprite.hit_rect.centery = sprite.pos.y
 
 
 class Player(pg.sprite.Sprite):
@@ -33,7 +33,11 @@ class Player(pg.sprite.Sprite):
     dead_images = []
     jump_images = []
     jumpattack_images = []
-    walk_images = []
+    idx_walk = 0
+    walk_images_names = ["Walk (1)", "Walk (2)", "Walk (3)", "Walk (4)", "Walk (5)", "Walk (6)", "Walk (7)", "Walk (8)",
+                         "Walk (9)", "Walk (10)", ]
+    walk_sprites = dict(((img_name, pg.image.load(RESOURCE_FOLDER + "/knight/" + img_name + ".png"))
+                         for img_name in walk_images_names))
     run_images = []
 
     def __init__(self, game, x, y):
@@ -64,8 +68,12 @@ class Player(pg.sprite.Sprite):
             self.rot_speed = -PLAYER_ROT_SPEED
         if keys[pg.K_UP] or keys[pg.K_w]:
             self.vel = vec(PLAYER_SPEED, 0).rotate(-self.rot)
+            self.game.player_img = pg.transform.scale(self.next_image(self.walk_sprites), (100, 100))
+            self.image = self.game.player_img
         if keys[pg.K_DOWN] or keys[pg.K_s]:
             self.vel = vec(-PLAYER_SPEED / 2, 0).rotate(-self.rot)
+            self.game.player_img = pg.transform.scale(self.next_image(self.walk_sprites), (100, 100))
+            self.image = self.game.player_img
         if keys[pg.K_SPACE]:
             now = pg.time.get_ticks()
             if now - self.last_shot > BULLET_RATE:
@@ -75,8 +83,16 @@ class Player(pg.sprite.Sprite):
                 Bullet(self.game, pos, dir)
                 self.vel = vec(-KICKBACK, 0).rotate(-self.rot)
 
+    def next_image(self, images):
+        self.idx_walk += 1
+        if self.idx_walk >= len(images):
+            self.idx_walk = 0
+        return images[self.walk_images_names[self.idx_walk]]
+
     def update(self):
+
         self.get_keys()
+
         self.rot = (self.rot + self.rot_speed * self.game.dt) % 360
         self.image = pg.transform.rotate(self.game.player_img, self.rot)
         self.rect = self.image.get_rect()
@@ -84,10 +100,10 @@ class Player(pg.sprite.Sprite):
         self.pos += self.vel * self.game.dt
         self.hit_rect.centerx = self.pos.x
 
-        collide_with_walls(self, self.game.walls, 'x')
+        # collide_with_walls(self, self.game.walls, 'x')
         self.hit_rect.centery = self.pos.y
 
-        collide_with_walls(self, self.game.walls, 'y')
+        # collide_with_walls(self, self.game.walls, 'y')
         self.rect.center = self.hit_rect.center
 
 
@@ -117,9 +133,9 @@ class Mob(pg.sprite.Sprite):
         self.vel += self.acc * self.game.dt
         self.pos += self.vel * self.game.dt + 0.5 * self.acc * self.game.dt ** 2
         self.hit_rect.centerx = self.pos.x
-        collide_with_walls(self, self.game.walls, 'x')
+        # collide_with_walls(self, self.game.walls, 'x')
         self.hit_rect.centery = self.pos.y
-        collide_with_walls(self, self.game.walls, 'y')
+        # collide_with_walls(self, self.game.walls, 'y')
         self.rect.center = self.hit_rect.center
         if self.health <= 0:
             self.kill()
@@ -158,15 +174,15 @@ class Bullet(pg.sprite.Sprite):
         if pg.time.get_ticks() - self.spawn_time > BULLET_LIFETIME:
             self.kill()
 
-
-class Wall(pg.sprite.Sprite):
-    def __init__(self, game, x, y):
-        self.groups = game.all_sprites, game.walls
-        pg.sprite.Sprite.__init__(self, self.groups)
-        self.game = game
-        self.image = game.wall_img
-        self.rect = self.image.get_rect()
-        self.x = x
-        self.y = y
-        self.rect.x = x * TILESIZE
-        self.rect.y = y * TILESIZE
+#
+# class Wall(pg.sprite.Sprite):
+#     def __init__(self, game, x, y):
+#         self.groups = game.all_sprites, game.walls
+#         pg.sprite.Sprite.__init__(self, self.groups)
+#         self.game = game
+#         self.image = game.wall_img
+#         self.rect = self.image.get_rect()
+#         self.x = x
+#         self.y = y
+#         self.rect.x = x * TILESIZE
+#         self.rect.y = y * TILESIZE
