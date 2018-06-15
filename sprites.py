@@ -76,7 +76,13 @@ class Player(SpriteEntity):
             self.image = pg.transform.scale(self.imageOriginal, (100, 100))
 
             now = pg.time.get_ticks()
-            if now - self.last_frame_change > PLAYER_RATES[self.state]:
+            diff = now - self.last_frame_change
+
+            print(diff)
+            print("State " + self.state.name + "rate: " + str(PLAYER_RATES[self.state]))
+            if diff > PLAYER_RATES[self.state]:
+                print('Changed')
+
                 self.last_frame_change = now
                 self.frameIdx = (self.frameIdx + 1) % 10
                 self.setFrame(self.frameIdx)
@@ -98,7 +104,6 @@ class Player(SpriteEntity):
     def update(self):
         self.get_keys()
         self.image = pg.transform.rotate(pg.transform.scale(self.imageOriginal, (100, 100)), self.rot)
-        print(self.frameIdx)
         self.rect = self.image.get_rect()
         self.rect.center = self.pos
         self.pos += self.vel * self.game.dt

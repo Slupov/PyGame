@@ -46,7 +46,7 @@ PLAYER_HIT_RECT = pg.Rect(0, 0, 35, 35)
 BARREL_OFFSET = vec(30, 10)
 
 PLAYER_RATES = {SpriteState.IDLE: 10,
-                SpriteState.WALK: 10,
+                SpriteState.WALK: 50,
                 SpriteState.RUN: 10,
                 SpriteState.ATTACK: 10,
                 SpriteState.JUMP: 10,
@@ -74,7 +74,7 @@ MOB_WALK_RATE = 10
 MOB_RUN_RATE = 10
 
 MOB_RATES = {SpriteState.IDLE: 10,
-             SpriteState.WALK: 20,
+             SpriteState.WALK: 5,
              SpriteState.RUN: 10,
              SpriteState.ATTACK: 10,
              SpriteState.JUMP: 10,
