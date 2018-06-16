@@ -14,8 +14,10 @@ class SpriteEntity(pg.sprite.Sprite):
 
         pg.sprite.Sprite.__init__(self, self.groups)
 
-        self.setState(SpriteState.IDLE)
         self.stateSpritesCount = 0
+
+        self.state = None
+        self.setState(SpriteState.IDLE)
 
         self.images = {}
         self.imageOriginal = None
@@ -39,6 +41,9 @@ class SpriteEntity(pg.sprite.Sprite):
         frame = frame % self.stateSpritesCount
         self.frameIdx = frame
         self.imageOriginal = self.images[self.state.name][frame]
+        self.image = self.imageOriginal
+
+    #     one has to call a scaling function after setFrame
 
     def setState(self, state):
         pass
@@ -51,6 +56,16 @@ class SpriteEntity(pg.sprite.Sprite):
 
     def initImages(self):
         pass
+
+    def handleState(self):
+        now = pg.time.get_ticks()
+        diff = now - self.last_frame_change
+
+        if diff > PLAYER_RATES[self.state]:
+            self.last_frame_change = now
+            self.frameIdx = (self.frameIdx + 1) % self.stateSpritesCount
+
+            self.setFrame(self.frameIdx)
 
     def update(self):
         pass
@@ -91,16 +106,6 @@ class Player(SpriteEntity):
         if keys[pg.K_UP] or keys[pg.K_w]:
             self.setState(SpriteState.WALK)
             self.velocity = vec(PLAYER_SPEED, 0).rotate(-self.rot)
-            self.image = pg.transform.scale(self.imageOriginal, (100, 100))
-
-            now = pg.time.get_ticks()
-            diff = now - self.last_frame_change
-
-            if diff > PLAYER_RATES[self.state]:
-                self.last_frame_change = now
-                self.frameIdx = (self.frameIdx + 1) % 10
-                self.setFrame(self.frameIdx)
-                self.image = self.imageOriginal
 
         if keys[pg.K_DOWN] or keys[pg.K_s]:
             self.velocity = vec(-PLAYER_SPEED / 2, 0).rotate(-self.rot)
@@ -115,16 +120,23 @@ class Player(SpriteEntity):
                 Bullet(self.game, pos, dir)
                 self.velocity = vec(-KICKBACK, 0).rotate(-self.rot)
 
+        self.handleState()
+        self.image = pg.transform.scale(self.imageOriginal, (100, 100))
+
     def update(self):
         self.get_keys()
-        self.image = pg.transform.rotate(pg.transform.scale(self.imageOriginal, (100, 100)), self.rot)
+        self.image = pg.transform.rotate(pg.transform.
+                                         scale(self.imageOriginal, (100, 100)), self.rot)
         self.rect = self.image.get_rect()
         self.rect.center = self.pos
         self.pos += self.velocity * self.game.dt
+        self.handleState()
 
 
 class Mob(SpriteEntity):
     genders = ["female", "male"]
+    roamRectW = 50
+    roamRectH = 50
 
     def __init__(self, game):
         self.gender = self.genders[randint(0, 1)]
@@ -133,6 +145,7 @@ class Mob(SpriteEntity):
         self.initImages()
         self.last_shot = 0
         self.spawn()
+        self.roamRect = pg.Rect(self.pos, (self.roamRectW, self.roamRectW))
 
     def initImages(self):
         # init images matrix - every row corresponds to a sprite state
@@ -152,28 +165,43 @@ class Mob(SpriteEntity):
         self.image = pg.transform.scale(self.imageOriginal, (100, 100))
 
     def spawn(self):
-        x = randint(0, SCREEN_WIDTH)
-        y = randint(0, SCREEN_HEIGHT)
+        x = randint(0, self.game.map_rect.width / TILESIZE)
+        y = randint(0, self.game.map_rect.height / TILESIZE)
 
         # TODO Stoyan Lupov 16-06-2018 Check if this lands on a wall or other object and generate again if so
-        self.pos = vec(x, y)
+        self.pos = vec(x, y) * TILESIZE
 
     def setState(self, state):
         self.stateSpritesCount = MOB_STATES_SPRITE_CNT[state]
         self.state = state
+
+    def handleState(self):
+        super().handleState()
+
+        # if self.state == SpriteState.IDLE:
+        #     self.roam()
+        # elif self.state == SpriteState.WALK:
+        #     pass
+        # elif self.state == SpriteState.RUN:
+        #     pass
+        # elif self.state == SpriteState.ATTACK:
+        #     pass
+        # elif self.state == SpriteState.DEAD:
+        #     pass
 
     def updateVelocity(self):
         if self.state == SpriteState.WALK:
             self.velocity = vec(PLAYER_SPEED, 0).rotate(-self.rot)
 
     def update(self):
-        self.velocity = vec(0, 0)
+        self.updateVelocity()
         self.image = pg.transform.rotate(pg.transform.scale(self.imageOriginal, (100, 100)), self.rot)
         self.rect = self.image.get_rect()
         self.rect.center = self.pos
         self.pos += self.velocity * self.game.dt
 
-        pass
+        self.handleState()
+        self.image = pg.transform.scale(self.imageOriginal, (100, 100))
 
     def roam(self):
         pass
@@ -186,10 +214,10 @@ class Mob(SpriteEntity):
         else:
             col = RED
 
-        # width = int(self.rect.width * self.health / MOB_HEALTH)
-        # self.health_bar = pg.Rect(0, 0, width, 7)
-        # if self.health < MOB_HEALTH:
-        #     pg.draw.rect(self.image, col, self.health_bar)
+        width = int(self.rect.width * self.health / MOB_HEALTH)
+        self.health_bar = pg.Rect(0, 0, width, 7)
+        if self.health < MOB_HEALTH:
+            pg.draw.rect(self.image, col, self.health_bar)
 
 
 class Bullet(pg.sprite.Sprite):

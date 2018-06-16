@@ -44,7 +44,7 @@ PLAYER_ROT_SPEED = 2
 PLAYER_HIT_RECT = pg.Rect(0, 0, 35, 35)
 BARREL_OFFSET = vec(30, 10)
 
-PLAYER_RATES = {SpriteState.IDLE: 10,
+PLAYER_RATES = {SpriteState.IDLE: 50,
                 SpriteState.WALK: 50,
                 SpriteState.RUN: 10,
                 SpriteState.ATTACK: 10,

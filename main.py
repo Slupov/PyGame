@@ -50,15 +50,19 @@ class Engine:
         self.map_img = self.map.make_map()
         self.map_rect = self.map_img.get_rect()
 
+        pass
+
     def new(self):
         # initialize all variables and do all the setup for a new game
         self.all_sprites = pg.sprite.Group()
         self.mobs = pg.sprite.Group()
 
-        mobsCnt = randint(20,30)
+        mobsCnt = randint(20, 30)
 
-        for x in 0, mobsCnt:
-            self.mobs.add(Mob(self))
+        mob = Mob(self)
+        for x in range(0, 5):
+            print(mob.pos)
+            mob = Mob(self)
 
         self.bullets = pg.sprite.Group()
         self.player = Player(self, 5, 5)
