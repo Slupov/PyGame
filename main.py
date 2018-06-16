@@ -73,13 +73,24 @@ class Engine:
         self.running = True
         while self.running:
             self.dt = self.clock.tick(FPS) / 1000.0  # fix for Python 2.x
-            self.handle_event()
+            self.handleEvent()
             self.update()
             self.draw()
 
     def quit(self):
         pg.quit()
         sys.exit()
+
+    def handleEvent(self):
+        # catch all events here
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                self.quit()
+            if event.type == pg.KEYDOWN:
+                if event.key == pg.K_ESCAPE:
+                    self.quit()
+            if event.type == pg.KEYUP:
+                self.player.setState(SpriteState.IDLE)
 
     def update(self):
         # update portion of the game loop
@@ -119,15 +130,6 @@ class Engine:
         draw_fps_counter(self.screen, self.clock.get_fps())
 
         pg.display.flip()
-
-    def handle_event(self):
-        # catch all events here
-        for event in pg.event.get():
-            if event.type == pg.QUIT:
-                self.quit()
-            if event.type == pg.KEYDOWN:
-                if event.key == pg.K_ESCAPE:
-                    self.quit()
 
     def show_start_screen(self):
         pass
