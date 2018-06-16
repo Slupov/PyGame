@@ -2,7 +2,8 @@ from random import randint
 from random import uniform
 
 from settings import *
-from pytmx import  pytmx
+from pytmx import pytmx
+
 vec = pg.math.Vector2
 
 
@@ -13,7 +14,7 @@ class SpriteEntity(pg.sprite.Sprite):
 
         pg.sprite.Sprite.__init__(self, self.groups)
 
-        self.state = SpriteState.IDLE
+        self.setState(SpriteState.IDLE)
         self.stateSpritesCount = 0
 
         self.images = {}
@@ -32,13 +33,7 @@ class SpriteEntity(pg.sprite.Sprite):
         self.velocity = vec(0, 0)
         self.health = 100
 
-        # init images matrix - every row corresponds to a sprite state
-        for name, member in SpriteState.__members__.items():
-            self.images[name] = list()
-            for x in range(1, 11):
-                img = pg.image \
-                    .load(RESOURCE_FOLDER + "/knight/" + name.lower() + "_(" + str(x) + ").png").convert_alpha()
-                self.images[name].append(img)
+        self.initImages()
 
     def setFrame(self, frame):
         frame = frame % self.stateSpritesCount
@@ -51,6 +46,12 @@ class SpriteEntity(pg.sprite.Sprite):
     def get_keys(self):
         pass
 
+    def updateVelocity(self):
+        pass
+
+    def initImages(self):
+        pass
+
     def update(self):
         pass
 
@@ -58,9 +59,19 @@ class SpriteEntity(pg.sprite.Sprite):
 class Player(SpriteEntity):
     def __init__(self, game, x, y):
         super().__init__(game, x, y)
-        self.imageOriginal = pg.image.load(RESOURCE_FOLDER + "/knight/idle_(1).png").convert_alpha()
-        self.image = pg.transform.scale(self.imageOriginal, (100, 100))
         self.last_shot = 0
+
+    def initImages(self):
+        # init images matrix - every row corresponds to a sprite state
+        for (state, spriteCnt) in PLAYER_STATES_SPRITE_CNT.items():
+            self.images[state.name] = list()
+            for x in range(1, spriteCnt + 1):
+                img = pg.image \
+                    .load(RESOURCE_FOLDER + "/knight/" + state.name.lower() + "_(" + str(x) + ").png").convert_alpha()
+                self.images[state.name].append(img)
+
+        self.imageOriginal = self.images[self.state.name][self.frameIdx]
+        self.image = pg.transform.scale(self.imageOriginal, (100, 100))
 
     def setState(self, state):
         self.stateSpritesCount = PLAYER_STATES_SPRITE_CNT[state]
@@ -112,18 +123,33 @@ class Player(SpriteEntity):
         self.pos += self.velocity * self.game.dt
 
 
-
 class Mob(SpriteEntity):
     genders = ["female", "male"]
 
     def __init__(self, game):
-        super().__init__(game, 0, 0)
-
         self.gender = self.genders[randint(0, 1)]
-        self.imageOriginal = pg.image.load(RESOURCE_FOLDER + "/zombie/" + self.gender + "/idle_(1).png").convert_alpha()
-        self.image = pg.transform.scale(self.imageOriginal, (100, 100))
+
+        super().__init__(game, 0, 0)
+        self.initImages()
         self.last_shot = 0
         self.spawn()
+
+    def initImages(self):
+        # init images matrix - every row corresponds to a sprite state
+        for (state, spriteCnt) in MOB_STATES_SPRITE_CNT.items():
+            self.images[state.name] = list()
+            for x in range(1, spriteCnt + 1):
+                img = pg.image \
+                    .load(RESOURCE_FOLDER + "/zombie/" +
+                          self.gender + "/" +
+                          state.name.lower() +
+                          "_(" +
+                          str(x) +
+                          ").png").convert_alpha()
+                self.images[state.name].append(img)
+
+        self.imageOriginal = self.images[self.state.name][self.frameIdx]
+        self.image = pg.transform.scale(self.imageOriginal, (100, 100))
 
     def spawn(self):
         x = randint(0, SCREEN_WIDTH)
@@ -135,6 +161,10 @@ class Mob(SpriteEntity):
     def setState(self, state):
         self.stateSpritesCount = MOB_STATES_SPRITE_CNT[state]
         self.state = state
+
+    def updateVelocity(self):
+        if self.state == SpriteState.WALK:
+            self.velocity = vec(PLAYER_SPEED, 0).rotate(-self.rot)
 
     def update(self):
         self.velocity = vec(0, 0)
