@@ -28,15 +28,14 @@ BROWN = (106, 55, 5)
 RESOURCE_FOLDER = "resources"
 
 # Engine settings
-WIDTH = 1280  # 16 * 64 or 32 * 32 or 64 * 16
-HEIGHT = 768  # 16 * 48 or 32 * 24 or 64 * 12
+SCREEN_WIDTH = 1280  # 16 * 64 or 32 * 32 or 64 * 16
+SCREEN_HEIGHT = 768  # 16 * 48 or 32 * 24 or 64 * 12
 FPS = 60
-TITLE = "Tilemap Demo"
-BGCOLOR = BROWN
+TITLE = "Zombie Kill v1.0"
 
 TILESIZE = 64
-GRIDWIDTH = WIDTH / TILESIZE
-GRIDHEIGHT = HEIGHT / TILESIZE
+GRIDWIDTH = SCREEN_WIDTH / TILESIZE
+GRIDHEIGHT = SCREEN_HEIGHT / TILESIZE
 
 # Player settings
 PLAYER_HEALTH = 100
@@ -52,6 +51,14 @@ PLAYER_RATES = {SpriteState.IDLE: 10,
                 SpriteState.JUMP: 10,
                 SpriteState.JUMPATTACK: 10,
                 SpriteState.DEAD: 10, }
+
+PLAYER_STATES_SPRITE_CNT = {SpriteState.IDLE: 10,
+                            SpriteState.WALK: 10,
+                            SpriteState.RUN: 10,
+                            SpriteState.ATTACK: 10,
+                            SpriteState.JUMP: 10,
+                            SpriteState.JUMPATTACK: 10,
+                            SpriteState.DEAD: 10, }
 
 # Gun settings
 BULLET_IMG = RESOURCE_FOLDER + '/bullet.png'
@@ -77,6 +84,10 @@ MOB_RATES = {SpriteState.IDLE: 10,
              SpriteState.WALK: 5,
              SpriteState.RUN: 10,
              SpriteState.ATTACK: 10,
-             SpriteState.JUMP: 10,
-             SpriteState.JUMPATTACK: 10,
-             SpriteState.DEAD: 10, }
+             SpriteState.DEAD: 10}
+
+MOB_STATES_SPRITE_CNT = {SpriteState.IDLE: 15,
+                         SpriteState.WALK: 10,
+                         SpriteState.RUN: 0,
+                         SpriteState.ATTACK: 8,
+                         SpriteState.DEAD: 12}

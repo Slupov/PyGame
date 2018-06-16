@@ -57,12 +57,12 @@ class Camera:
         return rect.move(self.camera.topleft)
 
     def update(self, target):
-        x = -target.rect.centerx + int(WIDTH / 2)
-        y = -target.rect.centery + int(HEIGHT / 2)
+        x = -target.rect.centerx + int(SCREEN_WIDTH / 2)
+        y = -target.rect.centery + int(SCREEN_HEIGHT / 2)
 
         # limit scrolling to map size
         x = min(0, x)  # left
         y = min(0, y)  # top
-        x = max(-(self.width - WIDTH), x)  # right
-        y = max(-(self.height - HEIGHT), y)  # bottom
+        x = max(-(self.width - SCREEN_WIDTH), x)  # right
+        y = max(-(self.height - SCREEN_HEIGHT), y)  # bottom
         self.camera = pg.Rect(x, y, self.width, self.height)

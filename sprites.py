@@ -1,3 +1,4 @@
+from random import randint
 from random import uniform
 
 from settings import *
@@ -13,9 +14,10 @@ class SpriteEntity(pg.sprite.Sprite):
         pg.sprite.Sprite.__init__(self, self.groups)
 
         self.state = SpriteState.IDLE
+        self.stateSpritesCount = 0
 
         self.images = {}
-        self.imageOriginal = pg.image.load(RESOURCE_FOLDER + "/knight/idle_(1).png").convert_alpha()
+        self.imageOriginal = None
         self.image = None
 
         # current frame of state animation
@@ -39,12 +41,12 @@ class SpriteEntity(pg.sprite.Sprite):
                 self.images[name].append(img)
 
     def setFrame(self, frame):
-        frame = frame % 10
+        frame = frame % self.stateSpritesCount
         self.frameIdx = frame
         self.imageOriginal = self.images[self.state.name][frame]
 
     def setState(self, state):
-        self.state = state
+        pass
 
     def get_keys(self):
         pass
@@ -56,12 +58,17 @@ class SpriteEntity(pg.sprite.Sprite):
 class Player(SpriteEntity):
     def __init__(self, game, x, y):
         super().__init__(game, x, y)
+        self.imageOriginal = pg.image.load(RESOURCE_FOLDER + "/knight/idle_(1).png").convert_alpha()
         self.image = pg.transform.scale(self.imageOriginal, (100, 100))
         self.last_shot = 0
 
+    def setState(self, state):
+        self.stateSpritesCount = PLAYER_STATES_SPRITE_CNT[state]
+        self.state = state
+
     def get_keys(self):
         self.rot_speed = 0
-        self.vel = vec(0, 0)
+        self.velocity = vec(0, 0)
 
         keys = pg.key.get_pressed()
         if keys[pg.K_LEFT] or keys[pg.K_a]:
@@ -72,7 +79,7 @@ class Player(SpriteEntity):
 
         if keys[pg.K_UP] or keys[pg.K_w]:
             self.setState(SpriteState.WALK)
-            self.vel = vec(PLAYER_SPEED, 0).rotate(-self.rot)
+            self.velocity = vec(PLAYER_SPEED, 0).rotate(-self.rot)
             self.image = pg.transform.scale(self.imageOriginal, (100, 100))
 
             now = pg.time.get_ticks()
@@ -85,7 +92,7 @@ class Player(SpriteEntity):
                 self.image = self.imageOriginal
 
         if keys[pg.K_DOWN] or keys[pg.K_s]:
-            self.vel = vec(-PLAYER_SPEED / 2, 0).rotate(-self.rot)
+            self.velocity = vec(-PLAYER_SPEED / 2, 0).rotate(-self.rot)
             self.image = pg.transform.scale(self.imageOriginal, (100, 100))
 
         if keys[pg.K_SPACE]:
@@ -95,28 +102,50 @@ class Player(SpriteEntity):
                 dir = vec(1, 0).rotate(-self.rot)
                 pos = self.pos + BARREL_OFFSET.rotate(-self.rot)
                 Bullet(self.game, pos, dir)
-                self.vel = vec(-KICKBACK, 0).rotate(-self.rot)
+                self.velocity = vec(-KICKBACK, 0).rotate(-self.rot)
 
     def update(self):
         self.get_keys()
         self.image = pg.transform.rotate(pg.transform.scale(self.imageOriginal, (100, 100)), self.rot)
         self.rect = self.image.get_rect()
         self.rect.center = self.pos
-        self.pos += self.vel * self.game.dt
+        self.pos += self.velocity * self.game.dt
 
 
 class Mob(SpriteEntity):
-    def __init__(self, game, x, y):
-        super().__init__(game, x, y)
+    genders = ["female", "male"]
+
+    def __init__(self, game):
+        super().__init__(game, 0, 0)
+
+        self.gender = self.genders[randint(0, 1)]
+        self.imageOriginal = pg.image.load(RESOURCE_FOLDER + "/zombie/" + self.gender + "/idle_(1).png").convert_alpha()
         self.image = pg.transform.scale(self.imageOriginal, (100, 100))
         self.last_shot = 0
+        self.spawn()
+
+    def spawn(self):
+        x = randint(0, SCREEN_WIDTH)
+        y = randint(0, SCREEN_HEIGHT)
+
+        # TODO Stoyan Lupov 16-06-2018 Check if this lands on a wall or other object and generate again if so
+        self.pos = vec(x, y)
+
+    def setState(self, state):
+        self.stateSpritesCount = MOB_STATES_SPRITE_CNT[state]
+        self.state = state
 
     def update(self):
+        self.velocity = vec(0, 0)
+        self.image = pg.transform.rotate(pg.transform.scale(self.imageOriginal, (100, 100)), self.rot)
+        self.rect = self.image.get_rect()
+        self.rect.center = self.pos
+        self.pos += self.velocity * self.game.dt
+
         pass
 
     def roam(self):
         pass
-
 
     def draw_health(self):
         if self.health > 60:
@@ -126,10 +155,10 @@ class Mob(SpriteEntity):
         else:
             col = RED
 
-        width = int(self.rect.width * self.health / MOB_HEALTH)
-        self.health_bar = pg.Rect(0, 0, width, 7)
-        if self.health < MOB_HEALTH:
-            pg.draw.rect(self.image, col, self.health_bar)
+        # width = int(self.rect.width * self.health / MOB_HEALTH)
+        # self.health_bar = pg.Rect(0, 0, width, 7)
+        # if self.health < MOB_HEALTH:
+        #     pg.draw.rect(self.image, col, self.health_bar)
 
 
 class Bullet(pg.sprite.Sprite):

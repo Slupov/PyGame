@@ -3,6 +3,10 @@ import sys
 from sprites import *
 from tilemap import *
 
+# init fonts module
+pg.font.init()
+myfont = pg.font.SysFont('Comic Sans MS', 20)
+
 
 # HUD functions
 def draw_player_health(surf, x, y, pct):
@@ -27,10 +31,16 @@ def draw_player_health(surf, x, y, pct):
     pg.draw.rect(surf, WHITE, outline_rect, 2)
 
 
+def draw_fps_counter(surf, fps):
+    textsurface = myfont.render("FPS: {:.2f}".format(fps), False, (0, 0, 0))
+
+    surf.blit(textsurface, (10, 30))
+
+
 class Engine:
     def __init__(self):
         pg.init()
-        self.screen = pg.display.set_mode((WIDTH, HEIGHT))
+        self.screen = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         pg.display.set_caption(TITLE)
         self.clock = pg.time.Clock()
         self.load_data()
@@ -44,6 +54,12 @@ class Engine:
         # initialize all variables and do all the setup for a new game
         self.all_sprites = pg.sprite.Group()
         self.mobs = pg.sprite.Group()
+
+        mobsCnt = randint(20,30)
+
+        for x in 0, mobsCnt:
+            self.mobs.add(Mob(self))
+
         self.bullets = pg.sprite.Group()
         self.player = Player(self, 5, 5)
         self.camera = Camera(self.map.width, self.map.height)
@@ -67,26 +83,24 @@ class Engine:
         self.camera.update(self.player)
 
         # mobs hit player
-        hits = pg.sprite.spritecollide(self.player, self.mobs, False, collide_hit_rect)
-        for hit in hits:
-            self.player.health -= MOB_DAMAGE
-            hit.vel = vec(0, 0)
-            if self.player.health <= 0:
-                self.running = False
-
-        if hits:
-            self.player.pos += vec(MOB_KNOCKBACK, 0).rotate(-hits[0].rot)
+        # hits = pg.sprite.spritecollide(self.player, self.mobs, False, collide_hit_rect)
+        # for hit in hits:
+        #     self.player.health -= MOB_DAMAGE
+        #     hit.vel = vec(0, 0)
+        #     if self.player.health <= 0:
+        #         self.running = False
+        #
+        # if hits:
+        #     self.player.pos += vec(MOB_KNOCKBACK, 0).rotate(-hits[0].rot)
 
         # bullets hit mobs
-        hits = pg.sprite.groupcollide(self.mobs, self.bullets, False, True)
+        # hits = pg.sprite.groupcollide(self.mobs, self.bullets, False, True)
 
-        for hit in hits:
-            hit.health -= BULLET_DAMAGE
-            hit.vel = vec(0, 0)
+        # for hit in hits:
+        #     hit.health -= BULLET_DAMAGE
+        #     hit.vel = vec(0, 0)
 
     def draw(self):
-        pg.display.set_caption("{:.2f}".format(self.clock.get_fps()))
-
         # draw map
         self.screen.blit(self.map_img, self.camera.apply_rect(self.map_rect))
 
@@ -98,6 +112,8 @@ class Engine:
 
         # draw HUD functions
         draw_player_health(self.screen, 10, 10, self.player.health / PLAYER_HEALTH)
+        draw_fps_counter(self.screen, self.clock.get_fps())
+
         pg.display.flip()
 
     def handle_event(self):
