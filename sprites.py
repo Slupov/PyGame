@@ -78,11 +78,7 @@ class Player(SpriteEntity):
             now = pg.time.get_ticks()
             diff = now - self.last_frame_change
 
-            print(diff)
-            print("State " + self.state.name + "rate: " + str(PLAYER_RATES[self.state]))
             if diff > PLAYER_RATES[self.state]:
-                print('Changed')
-
                 self.last_frame_change = now
                 self.frameIdx = (self.frameIdx + 1) % 10
                 self.setFrame(self.frameIdx)
@@ -109,14 +105,18 @@ class Player(SpriteEntity):
         self.pos += self.vel * self.game.dt
 
 
-class Mob(pg.sprite.Sprite):
+class Mob(SpriteEntity):
     def __init__(self, game, x, y):
-        self.groups = game.all_sprites, game.mobs
-        pg.sprite.Sprite.__init__(self, self.groups)
-        self.image = game.mob_img
+        super().__init__(game, x, y)
+        self.image = pg.transform.scale(self.imageOriginal, (100, 100))
+        self.last_shot = 0
 
     def update(self):
         pass
+
+    def roam(self):
+        pass
+
 
     def draw_health(self):
         if self.health > 60:
