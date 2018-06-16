@@ -2,7 +2,7 @@ from random import randint
 from random import uniform
 
 from settings import *
-
+from pytmx import  pytmx
 vec = pg.math.Vector2
 
 
@@ -110,6 +110,7 @@ class Player(SpriteEntity):
         self.rect = self.image.get_rect()
         self.rect.center = self.pos
         self.pos += self.velocity * self.game.dt
+
 
 
 class Mob(SpriteEntity):
