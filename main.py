@@ -54,6 +54,11 @@ def draw_fps_counter(surf, x, y, fps):
     surf.blit(textsurface, (x, y))
 
 
+def load_images():
+    load_mob_images()
+    load_player_images()
+
+
 class Engine:
     def __init__(self):
         pg.init()
@@ -63,6 +68,7 @@ class Engine:
         self.load_data()
 
     def load_data(self):
+        load_images()
         self.map = TiledMap(RESOURCE_FOLDER + '/maps/level1.tmx')
         self.map_img = self.map.make_map()
         self.map_rect = self.map_img.get_rect()
@@ -83,7 +89,7 @@ class Engine:
 
         self.mobs = pg.sprite.Group()
 
-        mobsCnt = randint(4, 5)
+        mobsCnt = randint(20, 30)
 
         # mob = Mob(self)
         # for x in range(0, mobsCnt):

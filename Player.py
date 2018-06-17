@@ -7,6 +7,19 @@ from PIL import Image
 normalImage = Image.open(RESOURCE_FOLDER + "/knight/idle_(1).png")
 nWidth, nHeight = normalImage.size
 
+playerImages = {}
+
+
+def load_player_images():
+    for (state, spriteCnt) in PLAYER_STATES_SPRITE_CNT.items():
+        playerImages[state.name] = list()
+        for x in range(1, spriteCnt + 1):
+            img = pg.image \
+                .load(RESOURCE_FOLDER + "/knight/" + state.name.lower() +
+                      "_(" + str(x) + ").png").convert_alpha()
+
+            playerImages[state.name].append(img)
+
 
 class Player(SpriteEntity):
     imgScaleFactor = nWidth / PLAYER_IMG_WIDTH
@@ -23,14 +36,7 @@ class Player(SpriteEntity):
         self.collideRect.center=self.rect.center
 
     def initImages(self):
-        # init images matrix - every row corresponds to a sprite state
-        for (state, spriteCnt) in PLAYER_STATES_SPRITE_CNT.items():
-            self.images[state.name] = list()
-            for x in range(1, spriteCnt + 1):
-                img = pg.image \
-                    .load(RESOURCE_FOLDER + "/knight/" + state.name.lower() + "_(" + str(x) + ").png").convert_alpha()
-                self.images[state.name].append(img)
-
+        self.images = playerImages
         self.imageOriginal = self.images[self.state.name][self.frameIdx]
         self.scaledSize = (PLAYER_IMG_WIDTH, int(nHeight / self.imgScaleFactor))
 

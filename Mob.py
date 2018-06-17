@@ -8,6 +8,28 @@ from PIL import Image
 normalImage = Image.open(RESOURCE_FOLDER + "/zombie/male/idle_(1).png")
 nWidth, nHeight = normalImage.size
 
+femaleMobImages = {}
+maleMobImages = {}
+
+
+def load_mob_images():
+    for (state, spriteCnt) in MOB_STATES_SPRITE_CNT.items():
+        femaleMobImages[state.name] = list()
+        maleMobImages[state.name] = list()
+
+        for x in range(1, spriteCnt + 1):
+            img = pg.image \
+                .load(RESOURCE_FOLDER + "/zombie/male/" + state.name.lower() +
+                      "_(" + str(x) + ").png").convert_alpha()
+
+            maleMobImages[state.name].append(img)
+
+            img = pg.image \
+                .load(RESOURCE_FOLDER + "/zombie/female/" + state.name.lower() +
+                      "_(" + str(x) + ").png").convert_alpha()
+
+            femaleMobImages[state.name].append(img)
+
 
 class Mob(SpriteEntity):
     genders = ["female", "male"]
@@ -30,22 +52,13 @@ class Mob(SpriteEntity):
         self.roamRect = pg.Rect(self.pos, (self.roamRectW, self.roamRectW))
 
     def initImages(self):
-        # init images matrix - every row corresponds to a sprite state
-        for (state, spriteCnt) in MOB_STATES_SPRITE_CNT.items():
-            self.images[state.name] = list()
-            for x in range(1, spriteCnt + 1):
-                img = pg.image \
-                    .load(RESOURCE_FOLDER + "/zombie/" +
-                          self.gender + "/" +
-                          state.name.lower() +
-                          "_(" +
-                          str(x) +
-                          ").png").convert_alpha()
-                self.images[state.name].append(img)
+        if self.gender == 'female':
+            self.images = femaleMobImages
+        else:
+            self.images = maleMobImages
 
         self.imageOriginal = self.images[self.state.name][self.frameIdx]
         self.scaledSize = (MOB_IMG_WIDTH, int(nHeight / self.imgScaleFactor))
-
         self.image = pg.transform.scale(self.imageOriginal, self.scaledSize)
 
     def spawn(self):
@@ -73,15 +86,20 @@ class Mob(SpriteEntity):
             self.image = pg.transform.scale(self.imageOriginal, self.scaledSize)
 
     def updateVelocity(self):
-        if self.state == SpriteState.WALK:
-            self.velocity = vec(PLAYER_SPEED, 0).rotate(-self.rot)
+        # if self.state == SpriteState.WALK:
+        #     self.velocity = vec(PLAYER_SPEED, 0).rotate(-self.rot)
+        pass
 
     def update(self):
         self.updateVelocity()
         self.image = pg.transform.rotate(pg.transform.scale(self.imageOriginal, self.scaledSize), self.rot)
+
         self.rect = self.image.get_rect()
         self.rect.center = self.pos
         self.pos += self.velocity * self.game.dt
+
+        # TODO Stoyan Lupov 17-06-2018 Check if player is inside roam rect and do stuff if so
+        # self.roam()
 
         self.handleState()
         self.image = pg.transform.scale(self.imageOriginal, self.scaledSize)
@@ -93,6 +111,12 @@ class Mob(SpriteEntity):
                 self.stamina = MOB_STAMINA
 
     def roam(self):
+        if self.state != SpriteState.WALK:
+            self.setState(SpriteState.WALK)
+
+        # uncomment velocity so mobs could walk
+        # self.velocity = vec(MOB_SPEED, 0).rotate(-self.rot)
+
         pass
 
     def chase_player(self):

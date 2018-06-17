@@ -82,6 +82,7 @@ BULLET_DAMAGE = 10
 # Mob settings
 MOB_SPEED = 150
 MOB_RUN_SPEED = 300
+MOB_ROT_SPEED = 2
 MOB_HIT_RECT = pg.Rect(0, 0, 30, 30)
 MOB_HEALTH = 100
 MOB_STAMINA = 100
@@ -92,7 +93,7 @@ MOB_WALK_RATE = 10
 MOB_RUN_RATE = 10
 
 MOB_RATES = {SpriteState.IDLE: 50,
-             SpriteState.WALK: 5,
+             SpriteState.WALK: 50,
              SpriteState.RUN: 10,
              SpriteState.ATTACK: 10,
              SpriteState.DEAD: 10,
