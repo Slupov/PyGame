@@ -19,8 +19,9 @@ WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 DARKGREY = (40, 40, 40)
 LIGHTGREY = (100, 100, 100)
-GREEN = (0, 255, 0)
 RED = (255, 0, 0)
+GREEN = (0, 255, 0)
+BLUE = (0, 0, 255)
 YELLOW = (255, 255, 0)
 BROWN = (106, 55, 5)
 
@@ -39,6 +40,8 @@ GRIDHEIGHT = SCREEN_HEIGHT / TILESIZE
 
 # Player settings
 PLAYER_HEALTH = 100
+PLAYER_STAMINA = 100
+PLAYER_STAMINA_LOSS_RATE = 2
 PLAYER_SPEED = 280
 PLAYER_ROT_SPEED = 2
 PLAYER_HIT_RECT = pg.Rect(0, 0, 35, 35)
@@ -60,6 +63,8 @@ PLAYER_STATES_SPRITE_CNT = {SpriteState.IDLE: 10,
                             SpriteState.JUMPATTACK: 10,
                             SpriteState.DEAD: 10, }
 
+PLAYER_IMG_WIDTH = 100
+
 # Gun settings
 BULLET_IMG = RESOURCE_FOLDER + '/bullet.png'
 BULLET_SPEED = 500
@@ -74,13 +79,15 @@ MOB_IMG = 'zombie1_hold.png'
 MOB_SPEED = 150
 MOB_HIT_RECT = pg.Rect(0, 0, 30, 30)
 MOB_HEALTH = 100
+MOB_STAMINA = 100
+MOB_STAMINA_LOSS_RATE = 5
 MOB_DAMAGE = 10
 MOB_KNOCKBACK = 20
 
 MOB_WALK_RATE = 10
 MOB_RUN_RATE = 10
 
-MOB_RATES = {SpriteState.IDLE: 10,
+MOB_RATES = {SpriteState.IDLE: 50,
              SpriteState.WALK: 5,
              SpriteState.RUN: 10,
              SpriteState.ATTACK: 10,
@@ -91,3 +98,6 @@ MOB_STATES_SPRITE_CNT = {SpriteState.IDLE: 15,
                          SpriteState.RUN: 0,
                          SpriteState.ATTACK: 8,
                          SpriteState.DEAD: 12}
+
+
+MOB_IMG_WIDTH = 100

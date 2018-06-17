@@ -4,7 +4,6 @@ from Tilemap import *
 from Mob import *
 from Player import *
 
-
 # init fonts module
 pg.font.init()
 myfont = pg.font.SysFont('Comic Sans MS', 20)
@@ -33,9 +32,26 @@ def draw_player_health(surf, x, y, pct):
     pg.draw.rect(surf, WHITE, outline_rect, 2)
 
 
-def draw_fps_counter(surf, fps):
+def draw_player_stamina(surf, x, y, pct):
+    if pct < 0:
+        pct = 0
+
+    BAR_LENGTH = 100
+    BAR_HEIGHT = 20
+
+    fill = pct * BAR_LENGTH
+    outline_rect = pg.Rect(x, y, BAR_LENGTH, BAR_HEIGHT)
+    fill_rect = pg.Rect(x, y, fill, BAR_HEIGHT)
+
+    col = BLUE
+
+    pg.draw.rect(surf, col, fill_rect)
+    pg.draw.rect(surf, WHITE, outline_rect, 2)
+
+
+def draw_fps_counter(surf, x, y, fps):
     textsurface = myfont.render("FPS: {:.2f}".format(fps), False, (0, 0, 0))
-    surf.blit(textsurface, (10, 30))
+    surf.blit(textsurface, (x, y))
 
 
 class Engine:
@@ -57,11 +73,11 @@ class Engine:
         # initialize all variables and do all the setup for a new game
         self.all_sprites = pg.sprite.Group()
         # Create walls group and add all walls from their layer
-        self.walls=pg.sprite.Group()
-        wall_layer=self.map.game_map.get_layer_by_name('walls')
+        self.walls = pg.sprite.Group()
+        wall_layer = self.map.game_map.get_layer_by_name('walls')
         for x, y, image in wall_layer:
             if image:
-                surf_img=self.map.game_map.get_tile_image(x,y,1)
+                surf_img = self.map.game_map.get_tile_image(x, y, 1)
                 wall = Wall(x, y, surf_img)
                 self.walls.add(wall)
 
@@ -136,11 +152,14 @@ class Engine:
         for sprite in self.all_sprites:
             if isinstance(sprite, Mob):
                 sprite.draw_health()
+                sprite.draw_stamina()
+
             self.screen.blit(sprite.image, self.camera.apply(sprite))
 
         # draw HUD functions
         draw_player_health(self.screen, 10, 10, self.player.health / PLAYER_HEALTH)
-        draw_fps_counter(self.screen, self.clock.get_fps())
+        draw_player_stamina(self.screen, 10, 35, self.player.stamina / PLAYER_STAMINA)
+        draw_fps_counter(self.screen, 10, 60, self.clock.get_fps())
 
         pg.display.flip()
 

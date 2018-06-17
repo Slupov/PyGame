@@ -2,11 +2,20 @@
 # @date 17.06.18
 # @author Stoyan Lupov
 from SpriteEntity import *
+from PIL import Image
+
+normalImage = Image.open(RESOURCE_FOLDER + "/knight/idle_(1).png")
+nWidth, nHeight = normalImage.size
 
 
 class Player(SpriteEntity):
+    imgScaleFactor = nWidth / PLAYER_IMG_WIDTH
+
     def __init__(self, game, x, y):
         super().__init__(game, x, y)
+        self.health = PLAYER_HEALTH
+        self.stamina = PLAYER_STAMINA
+        self.staminaLossRate = PLAYER_STAMINA_LOSS_RATE
         self.last_shot = 0
 
     def initImages(self):
@@ -19,7 +28,9 @@ class Player(SpriteEntity):
                 self.images[state.name].append(img)
 
         self.imageOriginal = self.images[self.state.name][self.frameIdx]
-        self.image = pg.transform.scale(self.imageOriginal, (100, 100))
+        self.scaledSize = (PLAYER_IMG_WIDTH, int(nHeight / self.imgScaleFactor))
+
+        self.image = pg.transform.scale(self.imageOriginal, self.scaledSize)
         self.rect = self.image.get_rect()
 
     def setState(self, state):
@@ -33,8 +44,9 @@ class Player(SpriteEntity):
         if diff > PLAYER_RATES[self.state]:
             self.last_frame_change = now
             self.frameIdx = (self.frameIdx + 1) % self.stateSpritesCount
-
             self.setFrame(self.frameIdx)
+
+        self.image = pg.transform.scale(self.imageOriginal, self.scaledSize)
 
     def get_keys(self):
         self.rot_speed = 0
@@ -53,12 +65,13 @@ class Player(SpriteEntity):
 
         if keys[pg.K_DOWN] or keys[pg.K_s]:
             self.velocity = vec(-PLAYER_SPEED / 2, 0).rotate(-self.rot)
-            self.image = pg.transform.scale(self.imageOriginal, (100, 100))
+            self.image = pg.transform.scale(self.imageOriginal, self.scaledSize)
 
         if keys[pg.K_q]:
             self.setState(SpriteState.ATTACK)
 
         if keys[pg.K_r]:
+            self.velocity = vec(PLAYER_SPEED + 500, 0).rotate(-self.rot)
             self.setState(SpriteState.RUN)
 
         if keys[pg.K_z]:
@@ -74,13 +87,12 @@ class Player(SpriteEntity):
                 self.velocity = vec(-KICKBACK, 0).rotate(-self.rot)
 
         self.handleState()
-        self.image = pg.transform.scale(self.imageOriginal, (100, 100))
+        self.image = pg.transform.scale(self.imageOriginal, self.scaledSize)
 
     def update(self):
         self.get_keys()
         self.image = pg.transform.rotate(pg.transform.
-                                         scale(self.imageOriginal, (100, 100)), self.rot)
+                                         scale(self.imageOriginal, self.scaledSize), self.rot)
         self.rect = self.image.get_rect()
         self.rect.center = self.pos
         self.pos += self.velocity * self.game.dt
-        # self.handleState()

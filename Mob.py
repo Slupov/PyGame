@@ -3,17 +3,26 @@
 # @author Stoyan Lupov
 from SpriteEntity import *
 from random import randint
+from PIL import Image
+
+normalImage = Image.open(RESOURCE_FOLDER + "/zombie/male/idle_(1).png")
+nWidth, nHeight = normalImage.size
 
 
 class Mob(SpriteEntity):
     genders = ["female", "male"]
     roamRectW = 50
     roamRectH = 50
+    imgScaleFactor = nWidth / MOB_IMG_WIDTH
 
     def __init__(self, game):
         self.gender = self.genders[randint(0, 1)]
 
         super().__init__(game, 0, 0)
+        self.health = MOB_HEALTH
+        self.stamina = MOB_STAMINA
+        self.staminaLossRate = MOB_STAMINA_LOSS_RATE
+
         self.initImages()
         self.last_shot = 0
         self.spawn()
@@ -34,7 +43,9 @@ class Mob(SpriteEntity):
                 self.images[state.name].append(img)
 
         self.imageOriginal = self.images[self.state.name][self.frameIdx]
-        self.image = pg.transform.scale(self.imageOriginal, (100, 100))
+        self.scaledSize = (MOB_IMG_WIDTH, int(nHeight / self.imgScaleFactor))
+
+        self.image = pg.transform.scale(self.imageOriginal, self.scaledSize)
 
     def spawn(self):
         x = randint(0, self.game.map_rect.width / TILESIZE)
@@ -48,18 +59,14 @@ class Mob(SpriteEntity):
         self.state = state
 
     def handleState(self):
-        super().handleState()
+        now = pg.time.get_ticks()
+        diff = now - self.last_frame_change
 
-        # if self.state == SpriteState.IDLE:
-        #     self.roam()
-        # elif self.state == SpriteState.WALK:
-        #     pass
-        # elif self.state == SpriteState.RUN:
-        #     pass
-        # elif self.state == SpriteState.ATTACK:
-        #     pass
-        # elif self.state == SpriteState.DEAD:
-        #     pass
+        if diff > MOB_RATES[self.state]:
+            self.last_frame_change = now
+            self.frameIdx = (self.frameIdx + 1) % self.stateSpritesCount
+            self.setFrame(self.frameIdx)
+            self.image = pg.transform.scale(self.imageOriginal, self.scaledSize)
 
     def updateVelocity(self):
         if self.state == SpriteState.WALK:
@@ -67,13 +74,13 @@ class Mob(SpriteEntity):
 
     def update(self):
         self.updateVelocity()
-        self.image = pg.transform.rotate(pg.transform.scale(self.imageOriginal, (100, 100)), self.rot)
+        self.image = pg.transform.rotate(pg.transform.scale(self.imageOriginal, self.scaledSize), self.rot)
         self.rect = self.image.get_rect()
         self.rect.center = self.pos
         self.pos += self.velocity * self.game.dt
 
         self.handleState()
-        self.image = pg.transform.scale(self.imageOriginal, (100, 100))
+        self.image = pg.transform.scale(self.imageOriginal, self.scaledSize)
 
     def roam(self):
         pass
@@ -88,5 +95,19 @@ class Mob(SpriteEntity):
 
         width = int(self.rect.width * self.health / MOB_HEALTH)
         self.health_bar = pg.Rect(0, 0, width, 7)
-        if self.health < MOB_HEALTH:
-            pg.draw.rect(self.image, col, self.health_bar)
+
+        # if self.health < MOB_HEALTH:
+        #     pg.draw.rect(self.image, col, self.health_bar)
+
+        pg.draw.rect(self.image, col, self.health_bar)
+
+    def draw_stamina(self):
+        col = BLUE
+        width = int(self.rect.width * self.stamina / MOB_STAMINA)
+
+        self.stamina_bar = pg.Rect(0, 10, width, 7)
+
+        # if self.stamina < MOB_STAMINA:
+        #     pg.draw.rect(self.image, col, self.stamina_bar)
+
+        pg.draw.rect(self.image, col, self.stamina_bar)

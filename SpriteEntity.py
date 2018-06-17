@@ -31,8 +31,11 @@ class SpriteEntity(pg.sprite.Sprite):
         self.rot = 0
 
         self.velocity = vec(0, 0)
-        self.health = 100
+        self.health = 0
+        self.stamina = 0
+        self.staminaLossRate = 0
 
+        self.scaledSize = (0, 0)
         self.initImages()
 
     # one has to call a scaling function after setFrame
