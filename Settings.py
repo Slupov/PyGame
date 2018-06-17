@@ -50,7 +50,7 @@ PLAYER_RATES = {SpriteState.IDLE: 50,
                 SpriteState.ATTACK: 10,
                 SpriteState.JUMP: 10,
                 SpriteState.JUMPATTACK: 10,
-                SpriteState.DEAD: 10, }
+                SpriteState.DEAD: 70, }
 
 PLAYER_STATES_SPRITE_CNT = {SpriteState.IDLE: 10,
                             SpriteState.WALK: 10,

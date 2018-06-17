@@ -1,5 +1,5 @@
 import pytmx
-from settings import *
+from Settings import *
 
 
 def collide_hit_rect(one, two):

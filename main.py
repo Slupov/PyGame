@@ -1,7 +1,9 @@
 import sys
 
-from sprites import *
-from tilemap import *
+from Tilemap import *
+from Mob import *
+from Player import *
+
 
 # init fonts module
 pg.font.init()
@@ -33,7 +35,6 @@ def draw_player_health(surf, x, y, pct):
 
 def draw_fps_counter(surf, fps):
     textsurface = myfont.render("FPS: {:.2f}".format(fps), False, (0, 0, 0))
-
     surf.blit(textsurface, (10, 30))
 
 
@@ -66,10 +67,10 @@ class Engine:
 
         self.mobs = pg.sprite.Group()
 
-        mobsCnt = randint(20, 30)
+        mobsCnt = randint(4, 5)
 
         mob = Mob(self)
-        for x in range(0, 5):
+        for x in range(0, mobsCnt):
             print(mob.pos)
             mob = Mob(self)
 
@@ -106,8 +107,8 @@ class Engine:
         self.all_sprites.update()
         self.camera.update(self.player)
 
-        #if pg.sprite.spritecollide(self.player,self.walls,False):
-             # do something
+        # if pg.sprite.spritecollide(self.player,self.walls,False):
+        #      print("collide")
 
         # mobs hit player
         # hits = pg.sprite.spritecollide(self.player, self.mobs, False, collide_hit_rect)
