@@ -85,10 +85,10 @@ class Engine:
 
         mobsCnt = randint(4, 5)
 
-        mob = Mob(self)
-        for x in range(0, mobsCnt):
-            print(mob.pos)
-            mob = Mob(self)
+        # mob = Mob(self)
+        # for x in range(0, mobsCnt):
+        #     print(mob.pos)
+        #     mob = Mob(self)
 
         self.bullets = pg.sprite.Group()
         self.player = Player(self, 5, 5)
@@ -123,8 +123,9 @@ class Engine:
         self.all_sprites.update()
         self.camera.update(self.player)
 
-        # if pg.sprite.spritecollide(self.player,self.walls,False):
-        #      print("collide")
+
+
+
 
         # mobs hit player
         # hits = pg.sprite.spritecollide(self.player, self.mobs, False, collide_hit_rect)

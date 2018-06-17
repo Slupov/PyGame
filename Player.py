@@ -19,6 +19,8 @@ class Player(SpriteEntity):
         self.staminaRegenerateRate = PLAYER_RATES[STAMINA_REGEN]
 
         self.last_shot = 0
+        self.collideRect = pg.rect.Rect((0, 0), (70, 70))
+        self.collideRect.center=self.rect.center
 
     def initImages(self):
         # init images matrix - every row corresponds to a sprite state
@@ -34,6 +36,8 @@ class Player(SpriteEntity):
 
         self.image = pg.transform.scale(self.imageOriginal, self.scaledSize)
         self.rect = self.image.get_rect()
+        self.collideRect = pg.rect.Rect((0, 0), (50, 50))
+        self.collideRect.midbottom = self.rect.midbottom
 
     def setState(self, state):
         super().setState(state)
@@ -51,16 +55,26 @@ class Player(SpriteEntity):
             self.setFrame(self.frameIdx)
             self.image = pg.transform.scale(self.imageOriginal, self.scaledSize)
 
+    def wall_collision(self):
+        for wall in self.game.walls:
+            if self.collideRect.colliderect(wall):
+                self.pos -= self.velocity * self.game.dt
+                self.rect.center = self.pos
+                self.collideRect.midbottom = self.rect.midbottom
+                break
+
     def get_keys(self):
         self.rot_speed = 0
         self.velocity = vec(0, 0)
-
         keys = pg.key.get_pressed()
+
         if keys[pg.K_LEFT] or keys[pg.K_a]:
             self.rot = (self.rot + PLAYER_ROT_SPEED) % 360
+            self.collided = False
 
         if keys[pg.K_RIGHT] or keys[pg.K_d]:
             self.rot = (self.rot - PLAYER_ROT_SPEED) % 360
+            self.collided = False
 
         if keys[pg.K_UP] or keys[pg.K_w]:
             self.setState(SpriteState.WALK)
@@ -99,7 +113,7 @@ class Player(SpriteEntity):
         self.image = pg.transform.rotate(pg.transform.
                                          scale(self.imageOriginal, self.scaledSize), self.rot)
         self.rect = self.image.get_rect()
-        self.rect.center = self.pos
+
         self.pos += self.velocity * self.game.dt
 
         # regenerate stamina
@@ -107,3 +121,7 @@ class Player(SpriteEntity):
             self.regenerate_stamina()
             if self.stamina >= PLAYER_STAMINA:
                 self.stamina = PLAYER_STAMINA
+
+        self.rect.center = self.pos
+        self.collideRect.midbottom = self.rect.midbottom
+        self.wall_collision()

@@ -78,6 +78,8 @@ class SpriteEntity(pg.sprite.Sprite):
             self.last_stamina_reg = now
             self.stamina += 1
 
+    def wall_collision(self):
+        pass
 
 class Bullet(pg.sprite.Sprite):
     def __init__(self, engine, pos, dir):
@@ -108,6 +110,6 @@ class Wall(pg.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.x = x
         self.y = y
-        self.rect.x = x * TILESIZE
-        self.rect.y = y * TILESIZE
+        self.rect.x = x*TILESIZE
+        self.rect.y = y*TILESIZE
         self.mask = pg.mask.from_surface(img)
