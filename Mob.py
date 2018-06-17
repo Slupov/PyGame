@@ -21,7 +21,8 @@ class Mob(SpriteEntity):
         super().__init__(game, 0, 0)
         self.health = MOB_HEALTH
         self.stamina = MOB_STAMINA
-        self.staminaLossRate = MOB_STAMINA_LOSS_RATE
+        self.staminaLossRate = MOB_RATES[STAMINA_LOSS]
+        self.staminaRegenerateRate = MOB_RATES[STAMINA_REGEN]
 
         self.initImages()
         self.last_shot = 0
@@ -59,9 +60,12 @@ class Mob(SpriteEntity):
         self.state = state
 
     def handleState(self):
+        super().handleState()
+
         now = pg.time.get_ticks()
         diff = now - self.last_frame_change
 
+        # handle state animation
         if diff > MOB_RATES[self.state]:
             self.last_frame_change = now
             self.frameIdx = (self.frameIdx + 1) % self.stateSpritesCount
@@ -82,7 +86,16 @@ class Mob(SpriteEntity):
         self.handleState()
         self.image = pg.transform.scale(self.imageOriginal, self.scaledSize)
 
+        # regenerate stamina
+        if self.state != SpriteState.RUN:
+            self.regenerate_stamina()
+            if self.stamina >= MOB_STAMINA:
+                self.stamina = MOB_STAMINA
+
     def roam(self):
+        pass
+
+    def chase_player(self):
         pass
 
     def draw_health(self):

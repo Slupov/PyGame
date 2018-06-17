@@ -15,7 +15,9 @@ class Player(SpriteEntity):
         super().__init__(game, x, y)
         self.health = PLAYER_HEALTH
         self.stamina = PLAYER_STAMINA
-        self.staminaLossRate = PLAYER_STAMINA_LOSS_RATE
+        self.staminaLossRate = PLAYER_RATES[STAMINA_LOSS]
+        self.staminaRegenerateRate = PLAYER_RATES[STAMINA_REGEN]
+
         self.last_shot = 0
 
     def initImages(self):
@@ -34,19 +36,20 @@ class Player(SpriteEntity):
         self.rect = self.image.get_rect()
 
     def setState(self, state):
-        self.stateSpritesCount = PLAYER_STATES_SPRITE_CNT[state]
-        self.state = state
+        super().setState(state)
+        self.stateSpritesCount = PLAYER_STATES_SPRITE_CNT[self.state]
 
     def handleState(self):
+        super().handleState()
         now = pg.time.get_ticks()
         diff = now - self.last_frame_change
 
+        # handle state animation
         if diff > PLAYER_RATES[self.state]:
             self.last_frame_change = now
             self.frameIdx = (self.frameIdx + 1) % self.stateSpritesCount
             self.setFrame(self.frameIdx)
-
-        self.image = pg.transform.scale(self.imageOriginal, self.scaledSize)
+            self.image = pg.transform.scale(self.imageOriginal, self.scaledSize)
 
     def get_keys(self):
         self.rot_speed = 0
@@ -64,15 +67,17 @@ class Player(SpriteEntity):
             self.velocity = vec(PLAYER_SPEED, 0).rotate(-self.rot)
 
         if keys[pg.K_DOWN] or keys[pg.K_s]:
+            self.setState(SpriteState.WALK)
             self.velocity = vec(-PLAYER_SPEED / 2, 0).rotate(-self.rot)
-            self.image = pg.transform.scale(self.imageOriginal, self.scaledSize)
+            # self.image = pg.transform.scale(self.imageOriginal, self.scaledSize)
 
         if keys[pg.K_q]:
             self.setState(SpriteState.ATTACK)
 
         if keys[pg.K_r]:
-            self.velocity = vec(PLAYER_SPEED + 500, 0).rotate(-self.rot)
             self.setState(SpriteState.RUN)
+            if self.state == SpriteState.RUN:
+                self.velocity = vec(PLAYER_RUN_SPEED, 0).rotate(-self.rot)
 
         if keys[pg.K_z]:
             self.setState(SpriteState.DEAD)
@@ -96,3 +101,9 @@ class Player(SpriteEntity):
         self.rect = self.image.get_rect()
         self.rect.center = self.pos
         self.pos += self.velocity * self.game.dt
+
+        # regenerate stamina
+        if self.state != SpriteState.RUN:
+            self.regenerate_stamina()
+            if self.stamina >= PLAYER_STAMINA:
+                self.stamina = PLAYER_STAMINA

@@ -34,6 +34,8 @@ class SpriteEntity(pg.sprite.Sprite):
         self.health = 0
         self.stamina = 0
         self.staminaLossRate = 0
+        self.staminaRegenerateRate = 0
+        self.last_stamina_reg = 0
 
         self.scaledSize = (0, 0)
         self.initImages()
@@ -46,7 +48,10 @@ class SpriteEntity(pg.sprite.Sprite):
         self.image = self.imageOriginal
 
     def setState(self, state):
-        pass
+        if state == SpriteState.RUN and self.stamina < self.staminaLossRate:
+            state = SpriteState.WALK
+
+        self.state = state
 
     def get_keys(self):
         pass
@@ -58,13 +63,20 @@ class SpriteEntity(pg.sprite.Sprite):
         pass
 
     def handleState(self):
-        pass
+        if self.state == SpriteState.RUN:
+            self.stamina -= self.staminaLossRate
 
     def handleEvent(self, event):
         pass
 
     def update(self):
         pass
+
+    def regenerate_stamina(self):
+        now = pg.time.get_ticks()
+        if now - self.last_stamina_reg > self.staminaRegenerateRate:
+            self.last_stamina_reg = now
+            self.stamina += 1
 
 
 class Bullet(pg.sprite.Sprite):
