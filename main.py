@@ -55,6 +55,15 @@ class Engine:
     def new(self):
         # initialize all variables and do all the setup for a new game
         self.all_sprites = pg.sprite.Group()
+        # Create walls group and add all walls from their layer
+        self.walls=pg.sprite.Group()
+        wall_layer=self.map.game_map.get_layer_by_name('walls')
+        for x, y, image in wall_layer:
+            if image:
+                surf_img=self.map.game_map.get_tile_image(x,y,1)
+                wall = Wall(x, y, surf_img)
+                self.walls.add(wall)
+
         self.mobs = pg.sprite.Group()
 
         mobsCnt = randint(20, 30)
@@ -96,6 +105,9 @@ class Engine:
         # update portion of the game loop
         self.all_sprites.update()
         self.camera.update(self.player)
+
+        #if pg.sprite.spritecollide(self.player,self.walls,False):
+             # do something
 
         # mobs hit player
         # hits = pg.sprite.spritecollide(self.player, self.mobs, False, collide_hit_rect)

@@ -29,6 +29,7 @@ class SpriteEntity(pg.sprite.Sprite):
         self.rect = None
 
         self.pos = vec(x, y) * TILESIZE
+        self.prev_pos = vec(x, y) * TILESIZE
         self.rot = 0
 
         self.velocity = vec(0, 0)
@@ -76,6 +77,20 @@ class Player(SpriteEntity):
     def __init__(self, game, x, y):
         super().__init__(game, x, y)
         self.last_shot = 0
+        self.mask = pg.mask.from_surface(self.image).scale((90, 90))
+
+    def initImages(self):
+        # init images matrix - every row corresponds to a sprite state
+        for (state, spriteCnt) in PLAYER_STATES_SPRITE_CNT.items():
+            self.images[state.name] = list()
+            for x in range(1, spriteCnt + 1):
+                img = pg.image \
+                    .load(RESOURCE_FOLDER + "/knight/" + state.name.lower() + "_(" + str(x) + ").png").convert_alpha()
+                self.images[state.name].append(img)
+
+        self.imageOriginal = self.images[self.state.name][self.frameIdx]
+        self.image = pg.transform.scale(self.imageOriginal, (100, 100))
+        self.rect = self.image.get_rect()
 
     def initImages(self):
         # init images matrix - every row corresponds to a sprite state
@@ -137,6 +152,7 @@ class Player(SpriteEntity):
                                          scale(self.imageOriginal, (100, 100)), self.rot)
         self.rect = self.image.get_rect()
         self.rect.center = self.pos
+        self.prev_pos = self.pos
         self.pos += self.velocity * self.game.dt
         # self.handleState()
 
@@ -247,3 +263,16 @@ class Bullet(pg.sprite.Sprite):
 
         if pg.time.get_ticks() - self.spawn_time > BULLET_LIFETIME:
             self.kill()
+
+
+class Wall(pg.sprite.Sprite):
+    def __init__(self, x, y, img):
+        super().__init__()
+
+        self.image = img
+        self.rect = self.image.get_rect()
+        self.x = x
+        self.y = y
+        self.rect.x = x * TILESIZE
+        self.rect.y = y * TILESIZE
+        self.mask = pg.mask.from_surface(img)
