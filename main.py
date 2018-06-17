@@ -84,7 +84,9 @@ class Engine:
         for x, y, image in wall_layer:
             if image:
                 surf_img = self.map.game_map.get_tile_image(x, y, 1)
+
                 wall = Wall(x, y, surf_img)
+                print(wall.rect)
                 self.walls.add(wall)
 
         self.mobs = pg.sprite.Group()

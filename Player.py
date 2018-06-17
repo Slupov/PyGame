@@ -32,18 +32,15 @@ class Player(SpriteEntity):
         self.staminaRegenerateRate = PLAYER_RATES[STAMINA_REGEN]
 
         self.last_shot = 0
-        self.collideRect = pg.rect.Rect((0, 0), (70, 70))
+        self.collideRect = pg.rect.Rect((0, 0), (30, 30))
         self.collideRect.center=self.rect.center
 
     def initImages(self):
         self.images = playerImages
         self.imageOriginal = self.images[self.state.name][self.frameIdx]
         self.scaledSize = (PLAYER_IMG_WIDTH, int(nHeight / self.imgScaleFactor))
-
         self.image = pg.transform.scale(self.imageOriginal, self.scaledSize)
         self.rect = self.image.get_rect()
-        self.collideRect = pg.rect.Rect((0, 0), (50, 50))
-        self.collideRect.midbottom = self.rect.midbottom
 
     def setState(self, state):
         super().setState(state)
@@ -66,7 +63,7 @@ class Player(SpriteEntity):
             if self.collideRect.colliderect(wall):
                 self.pos -= self.velocity * self.game.dt
                 self.rect.center = self.pos
-                self.collideRect.midbottom = self.rect.midbottom
+                self.collideRect.center = self.rect.center
                 break
 
     def get_keys(self):
@@ -76,11 +73,9 @@ class Player(SpriteEntity):
 
         if keys[pg.K_LEFT] or keys[pg.K_a]:
             self.rot = (self.rot + PLAYER_ROT_SPEED) % 360
-            self.collided = False
 
         if keys[pg.K_RIGHT] or keys[pg.K_d]:
             self.rot = (self.rot - PLAYER_ROT_SPEED) % 360
-            self.collided = False
 
         if keys[pg.K_UP] or keys[pg.K_w]:
             self.setState(SpriteState.WALK)
@@ -129,5 +124,5 @@ class Player(SpriteEntity):
                 self.stamina = PLAYER_STAMINA
 
         self.rect.center = self.pos
-        self.collideRect.midbottom = self.rect.midbottom
+        self.collideRect.center = self.rect.center
         self.wall_collision()
