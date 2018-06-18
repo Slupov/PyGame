@@ -30,10 +30,8 @@ class Player(SpriteEntity):
         self.stamina = PLAYER_STAMINA
         self.staminaLossRate = PLAYER_RATES[STAMINA_LOSS]
         self.staminaRegenerateRate = PLAYER_RATES[STAMINA_REGEN]
-
         self.last_shot = 0
-        self.collideRect = pg.rect.Rect((0, 0), (30, 30))
-        self.collideRect.center=self.rect.center
+        self.mask = None
 
     def initImages(self):
         self.images = playerImages
@@ -41,6 +39,9 @@ class Player(SpriteEntity):
         self.scaledSize = (PLAYER_IMG_WIDTH, int(nHeight / self.imgScaleFactor))
         self.image = pg.transform.scale(self.imageOriginal, self.scaledSize)
         self.rect = self.image.get_rect()
+        self.collideRect = pg.rect.Rect((0, 0), (50, 50))
+        self.collideRect.midbottom = self.rect.midbottom
+        self.mask = pg.mask.from_surface(self.image)
 
     def setState(self, state):
         super().setState(state)
@@ -57,14 +58,14 @@ class Player(SpriteEntity):
             self.frameIdx = (self.frameIdx + 1) % self.stateSpritesCount
             self.setFrame(self.frameIdx)
             self.image = pg.transform.scale(self.imageOriginal, self.scaledSize)
+            self.mask = pg.mask.from_surface(self.image)
 
     def wall_collision(self):
-        for wall in self.game.walls:
-            if self.collideRect.colliderect(wall):
-                self.pos -= self.velocity * self.game.dt
-                self.rect.center = self.pos
-                self.collideRect.center = self.rect.center
-                break
+        # for wall in self.game.walls:
+        if pg.sprite.spritecollide(self, self.game.walls, False, pg.sprite.collide_rect):
+            self.pos -= self.velocity * self.game.dt
+            self.rect.center = self.pos
+            self.collideRect.midbottom = self.rect.midbottom
 
     def get_keys(self):
         self.rot_speed = 0
@@ -113,6 +114,8 @@ class Player(SpriteEntity):
         self.get_keys()
         self.image = pg.transform.rotate(pg.transform.
                                          scale(self.imageOriginal, self.scaledSize), self.rot)
+        self.mask = pg.mask.from_surface(self.image)
+
         self.rect = self.image.get_rect()
 
         self.pos += self.velocity * self.game.dt
@@ -124,5 +127,5 @@ class Player(SpriteEntity):
                 self.stamina = PLAYER_STAMINA
 
         self.rect.center = self.pos
-        self.collideRect.center = self.rect.center
+        self.collideRect.midbottom = self.rect.midbottom
         self.wall_collision()

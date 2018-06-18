@@ -93,10 +93,10 @@ class Engine:
 
         mobsCnt = randint(20, 30)
 
-        # mob = Mob(self)
-        # for x in range(0, mobsCnt):
-        #     print(mob.pos)
-        #     mob = Mob(self)
+        mob = Mob(self)
+        for x in range(0, mobsCnt):
+            print(mob.pos)
+            mob = Mob(self)
 
         self.bullets = pg.sprite.Group()
         self.player = Player(self, 5, 5)

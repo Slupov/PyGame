@@ -112,4 +112,4 @@ class Wall(pg.sprite.Sprite):
         self.y = y
         self.rect.x = x*TILESIZE
         self.rect.y = y*TILESIZE
-        self.mask = pg.mask.from_surface(img)
+        self.mask = pg.mask.from_surface(self.image)
