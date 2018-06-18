@@ -85,23 +85,24 @@ class Mob(SpriteEntity):
             self.setFrame(self.frameIdx)
             self.image = pg.transform.scale(self.imageOriginal, self.scaledSize)
 
-    def updateVelocity(self):
-        # if self.state == SpriteState.WALK:
-        #     self.velocity = vec(PLAYER_SPEED, 0).rotate(-self.rot)
-        pass
+        # check for attack on mob
+        if self.state == SpriteState.ATTACK:
+            playerMobHit = pg.sprite.collide_mask(self.game.player, self)
+            print("Mob attacked player")
 
     def update(self):
-        self.updateVelocity()
         self.image = pg.transform.rotate(pg.transform.scale(self.imageOriginal, self.scaledSize), self.rot)
 
         self.rect = self.image.get_rect()
         self.rect.center = self.pos
         self.pos += self.velocity * self.game.dt
 
-        # TODO Stoyan Lupov 17-06-2018 Check if player is inside roam rect and do stuff if so
+        # TODO Stoyan Lupov 17-06-2018 Check if player is inside roam rect and do stuff if so, else roam
         # self.roam()
 
+        self.velocity = vec(0, 0)
         self.handleState()
+
         self.image = pg.transform.scale(self.imageOriginal, self.scaledSize)
 
         # regenerate stamina
@@ -122,6 +123,15 @@ class Mob(SpriteEntity):
     def chase_player(self):
         pass
 
+    def take_hit(self, damage):
+        super(Mob, self).take_hit(damage)
+        # add kickback
+        kickback = 200
+        self.velocity = vec(-kickback, 0).rotate(-self.rot)
+
+        if self.health == 0:
+            self.setState(SpriteState.DEAD)
+
     def draw_health(self):
         if self.health > 60:
             col = GREEN
@@ -133,10 +143,8 @@ class Mob(SpriteEntity):
         width = int(self.rect.width * self.health / MOB_HEALTH)
         self.health_bar = pg.Rect(0, 0, width, 7)
 
-        # if self.health < MOB_HEALTH:
-        #     pg.draw.rect(self.image, col, self.health_bar)
-
-        pg.draw.rect(self.image, col, self.health_bar)
+        if self.health < MOB_HEALTH:
+            pg.draw.rect(self.image, col, self.health_bar)
 
     def draw_stamina(self):
         col = BLUE
@@ -144,7 +152,5 @@ class Mob(SpriteEntity):
 
         self.stamina_bar = pg.Rect(0, 10, width, 7)
 
-        # if self.stamina < MOB_STAMINA:
-        #     pg.draw.rect(self.image, col, self.stamina_bar)
-
-        pg.draw.rect(self.image, col, self.stamina_bar)
+        if self.stamina < MOB_STAMINA:
+            pg.draw.rect(self.image, col, self.stamina_bar)

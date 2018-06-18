@@ -60,6 +60,17 @@ class Player(SpriteEntity):
             self.image = pg.transform.scale(self.imageOriginal, self.scaledSize)
             self.mask = pg.mask.from_surface(self.image)
 
+        # check for attack on mob
+        if self.state == SpriteState.ATTACK:
+            for mob in self.game.mobs:
+                # playerMobHit = pg.sprite.spritecollide(self, self.game.mobs, False, pg.sprite.collide_mask)
+                playerMobHit = pg.sprite.collide_mask(self, mob)
+
+                # if no hits were blown on that mob
+                if playerMobHit:
+                    mob.take_hit(5)
+                    print("Player attacked mob")
+
     def wall_collision(self):
         # for wall in self.game.walls:
         if pg.sprite.spritecollide(self, self.game.walls, False, pg.sprite.collide_rect):
@@ -85,7 +96,6 @@ class Player(SpriteEntity):
         if keys[pg.K_DOWN] or keys[pg.K_s]:
             self.setState(SpriteState.WALK)
             self.velocity = vec(-PLAYER_SPEED / 2, 0).rotate(-self.rot)
-            # self.image = pg.transform.scale(self.imageOriginal, self.scaledSize)
 
         if keys[pg.K_q]:
             self.setState(SpriteState.ATTACK)

@@ -81,22 +81,20 @@ class Engine:
         # Create walls group and add all walls from their layer
         self.walls = pg.sprite.Group()
         wall_layer = self.map.game_map.get_layer_by_name('walls')
+
         for x, y, image in wall_layer:
             if image:
                 surf_img = self.map.game_map.get_tile_image(x, y, 1)
-
                 wall = Wall(x, y, surf_img)
-                print(wall.rect)
                 self.walls.add(wall)
 
         self.mobs = pg.sprite.Group()
 
         mobsCnt = randint(20, 30)
 
-        mob = Mob(self)
         for x in range(0, mobsCnt):
-            print(mob.pos)
             mob = Mob(self)
+            self.mobs.add(mob)
 
         self.bullets = pg.sprite.Group()
         self.player = Player(self, 5, 5)
@@ -130,28 +128,6 @@ class Engine:
         # update portion of the game loop
         self.all_sprites.update()
         self.camera.update(self.player)
-
-
-
-
-
-        # mobs hit player
-        # hits = pg.sprite.spritecollide(self.player, self.mobs, False, collide_hit_rect)
-        # for hit in hits:
-        #     self.player.health -= MOB_DAMAGE
-        #     hit.vel = vec(0, 0)
-        #     if self.player.health <= 0:
-        #         self.running = False
-        #
-        # if hits:
-        #     self.player.pos += vec(MOB_KNOCKBACK, 0).rotate(-hits[0].rot)
-
-        # bullets hit mobs
-        # hits = pg.sprite.groupcollide(self.mobs, self.bullets, False, True)
-
-        # for hit in hits:
-        #     hit.health -= BULLET_DAMAGE
-        #     hit.vel = vec(0, 0)
 
     def draw(self):
         # draw map
