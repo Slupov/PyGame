@@ -56,6 +56,9 @@ class SpriteEntity(pg.sprite.Sprite):
             self.setFrame(0)
             self.state = state
 
+            if state == SpriteState.IDLE:
+                self.velocity = vec(0, 0).rotate(-self.rot)
+
     def get_keys(self):
         pass
 

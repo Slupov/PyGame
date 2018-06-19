@@ -52,9 +52,6 @@ class Player(SpriteEntity):
         super(Player, self).setState(state)
         self.image = pg.transform.scale(self.imageOriginal, self.scaledSize)
 
-    def handleState(self):
-        super(Player, self).handleState()
-
         if self.state == SpriteState.WALK:
             if self.walkDirection == 1:
                 self.velocity = vec(PLAYER_SPEED, 0).rotate(-self.rot)
@@ -62,6 +59,9 @@ class Player(SpriteEntity):
                 self.velocity = vec(-PLAYER_SPEED / 2, 0).rotate(-self.rot)
         elif self.state == SpriteState.RUN:
             self.velocity = vec(PLAYER_RUN_SPEED, 0).rotate(-self.rot)
+
+    def handleState(self):
+        super(Player, self).handleState()
 
         # check for attack on mob
         if self.state == SpriteState.ATTACK:
