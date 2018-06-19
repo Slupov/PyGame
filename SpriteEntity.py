@@ -159,7 +159,8 @@ class SpriteEntity(pg.sprite.Sprite):
                 sprite.hit_rect.centery = sprite.pos.y
 
     def take_hit(self, damage):
-        self.health -= damage
+        if self.state != SpriteState.DEAD:
+            self.health -= damage
 
 
 class Bullet(pg.sprite.Sprite):

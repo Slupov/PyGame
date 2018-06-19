@@ -35,6 +35,7 @@ class Player(SpriteEntity):
         self.hit_rect = None
         self.initImages()
         self.setState(SpriteState.IDLE)
+        self.points = 0
 
     def initImages(self):
         self.images = playerImages
@@ -67,9 +68,13 @@ class Player(SpriteEntity):
             for mob in self.game.mobs:
                 playerMobHit = pg.sprite.collide_mask(self, mob)
 
-                # if no hits were blown on that mob
+                # if hits were blown on that mob
                 if playerMobHit:
-                    mob.take_hit(5)
+                    if mob.health <= 0:
+                        return
+                    elif mob.health - PLAYER_ATTACK_DAMAGE <= 0:
+                        self.points += PLAYER_POINTS_PER_MOB_KILLED
+                    mob.take_hit(PLAYER_ATTACK_DAMAGE)
 
     def get_keys(self):
         self.velocity = vec(0, 0)

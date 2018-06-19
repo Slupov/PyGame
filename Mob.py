@@ -94,7 +94,6 @@ class Mob(SpriteEntity):
         self.velocity = vec(0, 0)
         self.handleState()
 
-        # self.image = pg.transform.scale(self.imageOriginal, self.scaledSize)
         self.mask = pg.mask.from_surface(self.image)
 
         # regenerate stamina
@@ -104,8 +103,8 @@ class Mob(SpriteEntity):
                 self.stamina = MOB_STAMINA
 
     def roam(self):
-        if self.state != SpriteState.WALK:
-            self.setState(SpriteState.WALK)
+        # if self.state != SpriteState.WALK:
+        #     self.setState(SpriteState.WALK)
 
         # uncomment velocity so mobs could walk
         # self.velocity = vec(MOB_SPEED, 0).rotate(-self.rot)
@@ -117,6 +116,7 @@ class Mob(SpriteEntity):
 
     def take_hit(self, damage):
         super(Mob, self).take_hit(damage)
+
         # add kickback
         kbVec = self.collision_normal(self.game.player.mask, self.mask, self.game.player.pos, self.pos)
         if kbVec:

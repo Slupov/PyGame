@@ -54,6 +54,14 @@ def draw_fps_counter(surf, x, y, fps):
     surf.blit(textsurface, (x, y))
 
 
+def draw_player_points(surf, points):
+    pointsString = "POINTS: {0}".format(points)
+    text_width, text_height = myfont.size(pointsString)
+
+    textsurface = myfont.render(pointsString, False, (0, 0, 0))
+    surf.blit(textsurface, (SCREEN_WIDTH - text_width - 10, 0))
+
+
 def load_images():
     load_mob_images()
     load_player_images()
@@ -152,6 +160,7 @@ class Engine:
         # draw HUD functions
         draw_player_health(self.screen, 10, 10, self.player.health / PLAYER_HEALTH)
         draw_player_stamina(self.screen, 10, 35, self.player.stamina / PLAYER_STAMINA)
+        draw_player_points(self.screen, self.player.points)
         draw_fps_counter(self.screen, 10, 60, self.clock.get_fps())
 
         pg.display.flip()
