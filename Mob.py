@@ -38,9 +38,9 @@ class Mob(SpriteEntity):
     imgScaleFactor = nWidth / MOB_IMG_WIDTH
 
     def __init__(self, game):
+        super(Mob, self).__init__(game, 0, 0)
         self.gender = self.genders[randint(0, 1)]
 
-        super().__init__(game, 0, 0)
         self.health = MOB_HEALTH
         self.stamina = MOB_STAMINA
         self.staminaLossRate = MOB_RATES[STAMINA_LOSS]
@@ -50,6 +50,8 @@ class Mob(SpriteEntity):
         self.spawn()
         self.deathFrames = 0
         self.roamRect = pg.Rect(self.pos, (self.roamRectW, self.roamRectW))
+        self.initImages()
+        self.setState(SpriteState.IDLE)
 
     def initImages(self):
         if self.gender == 'female':
@@ -62,6 +64,18 @@ class Mob(SpriteEntity):
         self.image = pg.transform.scale(self.imageOriginal, self.scaledSize)
         self.mask = pg.mask.from_surface(self.image)
 
+    def setState(self, state):
+        self.stateSpritesCount = MOB_STATES_SPRITE_CNT[state]
+        super(Mob, self).setState(state)
+        self.image = pg.transform.scale(self.imageOriginal, self.scaledSize)
+
+    def handleState(self):
+        super(Mob, self).handleState()
+
+        # check for attack on player
+        if self.state == SpriteState.ATTACK:
+            playerMobHit = pg.sprite.collide_mask(self.game.player, self)
+
     def spawn(self):
         x = randint(0, self.game.map_rect.width / TILESIZE)
         y = randint(0, self.game.map_rect.height / TILESIZE)
@@ -69,32 +83,7 @@ class Mob(SpriteEntity):
         # TODO Stoyan Lupov 16-06-2018 Check if this lands on a wall or other object and generate again if so
         self.pos = vec(x, y) * TILESIZE
 
-    def setState(self, state):
-        self.stateSpritesCount = MOB_STATES_SPRITE_CNT[state]
-        self.state = state
-
-    def handleState(self):
-        super().handleState()
-
-        now = pg.time.get_ticks()
-        diff = now - self.last_frame_change
-
-        # handle state animation
-        if diff > MOB_RATES[self.state]:
-            self.last_frame_change = now
-            self.frameIdx = (self.frameIdx + 1) % self.stateSpritesCount
-            self.setFrame(self.frameIdx)
-            self.image = pg.transform.scale(self.imageOriginal, self.scaledSize)
-            self.mask = pg.mask.from_surface(self.image)
-
-        # check for attack on mob
-        if self.state == SpriteState.ATTACK:
-            playerMobHit = pg.sprite.collide_mask(self.game.player, self)
-
     def update(self):
-        self.image = pg.transform.rotate(pg.transform.scale(self.imageOriginal, self.scaledSize), self.rot)
-        self.mask = pg.mask.from_surface(self.image)
-
         self.rect = self.image.get_rect()
         self.rect.center = self.pos
         self.pos += self.velocity * self.game.dt
@@ -105,16 +94,9 @@ class Mob(SpriteEntity):
         self.velocity = vec(0, 0)
         self.handleState()
 
-        self.image = pg.transform.scale(self.imageOriginal, self.scaledSize)
+        # self.image = pg.transform.scale(self.imageOriginal, self.scaledSize)
         self.mask = pg.mask.from_surface(self.image)
 
-        # check if dead
-        if self.state == SpriteState.DEAD:
-            self.deathFrames += 1
-            if self.deathFrames == MOB_STATES_SPRITE_CNT[self.state]:
-                self.game.mobs.remove(self)
-                self.game.all_sprites.remove(self)
-            return
         # regenerate stamina
         if self.state != SpriteState.RUN:
             self.regenerate_stamina()
@@ -136,7 +118,6 @@ class Mob(SpriteEntity):
     def take_hit(self, damage):
         super(Mob, self).take_hit(damage)
         # add kickback
-        kickback = 200
         kbVec = self.collision_normal(self.game.player.mask, self.mask, self.game.player.pos, self.pos)
         if kbVec:
             self.velocity = vec(kbVec[0] * 2, kbVec[1] * 2).rotate(-self.rot)
@@ -166,3 +147,7 @@ class Mob(SpriteEntity):
 
         if self.stamina < MOB_STAMINA:
             pg.draw.rect(self.image, col, self.stamina_bar)
+
+    def die(self):
+        self.game.mobs.remove(self)
+        self.game.all_sprites.remove(self)

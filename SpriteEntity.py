@@ -14,8 +14,7 @@ class SpriteEntity(pg.sprite.Sprite):
 
         self.stateSpritesCount = 0
 
-        self.state = None
-        self.setState(SpriteState.IDLE)
+        self.state = SpriteState.IDLE
 
         self.images = {}
         self.imageOriginal = None
@@ -23,7 +22,9 @@ class SpriteEntity(pg.sprite.Sprite):
 
         # current frame of state animation
         self.frameIdx = 0
-        self.last_frame_change = 0  # tick when last frame change happened
+
+        # tick when last frame change happened
+        self.last_frame_change = 0
 
         self.rect = None
         self.mask = None
@@ -37,8 +38,10 @@ class SpriteEntity(pg.sprite.Sprite):
         self.staminaRegenerateRate = 0
         self.last_stamina_reg = 0
 
+        # 1 when walking forwards and -1 when backwards
+        self.walkDirection = 1
+
         self.scaledSize = (0, 0)
-        self.initImages()
 
     # one has to call a scaling function after setFrame
     def setFrame(self, frame):
@@ -48,10 +51,9 @@ class SpriteEntity(pg.sprite.Sprite):
         self.image = self.imageOriginal
 
     def setState(self, state):
-        if state == SpriteState.RUN and self.stamina < self.staminaLossRate:
-            state = SpriteState.WALK
-
-        self.state = state
+        if self.state != state:
+            self.setFrame(0)
+            self.state = state
 
     def get_keys(self):
         pass
@@ -66,10 +68,35 @@ class SpriteEntity(pg.sprite.Sprite):
         if self.state == SpriteState.RUN:
             self.stamina -= self.staminaLossRate
 
+        now = pg.time.get_ticks()
+        diff = now - self.last_frame_change
+
+        # handle state animation
+        if diff > MOB_RATES[self.state]:
+            self.last_frame_change = now
+
+            if self.state != SpriteState.DEAD:
+                self.frameIdx = (self.frameIdx + 1) % self.stateSpritesCount
+            else:
+                self.frameIdx += 1
+
+                # reached last death frame idx
+                if self.frameIdx == self.stateSpritesCount - 1:
+                    self.setFrame(self.frameIdx)
+                    self.die()
+                    return
+
+            self.setFrame(self.frameIdx)
+            self.image = pg.transform.scale(self.imageOriginal, self.scaledSize)
+            self.mask = pg.mask.from_surface(self.image)
+
     def handleEvent(self, event):
         pass
 
     def update(self):
+        pass
+
+    def die(self):
         pass
 
     def collision_normal(self, left_mask, right_mask, left_pos, right_pos):

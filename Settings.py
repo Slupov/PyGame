@@ -97,7 +97,7 @@ MOB_RATES = {SpriteState.IDLE: 50,
              SpriteState.WALK: 50,
              SpriteState.RUN: 10,
              SpriteState.ATTACK: 10,
-             SpriteState.DEAD: 70,
+             SpriteState.DEAD: 100,
              STAMINA_REGEN: 100,
              STAMINA_LOSS: 5}
 
