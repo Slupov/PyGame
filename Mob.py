@@ -102,6 +102,7 @@ class Mob(SpriteEntity):
             if self.stamina >= MOB_STAMINA:
                 self.stamina = MOB_STAMINA
 
+
     def roam(self):
         # if self.state != SpriteState.WALK:
         #     self.setState(SpriteState.WALK)

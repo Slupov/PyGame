@@ -76,6 +76,8 @@ class Engine:
         self.load_data()
         self.mobs = None
         self.walls = None
+        self.bullets = None
+
 
     def load_data(self):
         load_images()

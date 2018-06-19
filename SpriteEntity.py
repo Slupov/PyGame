@@ -172,6 +172,7 @@ class Bullet(pg.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.pos = vec(pos)
         self.rect.center = pos
+        self.mask = pg.mask.from_surface(self.image)
         spread = uniform(-GUN_SPREAD, GUN_SPREAD)
         self.vel = dir.rotate(spread) * BULLET_SPEED
         self.spawn_time = pg.time.get_ticks()
@@ -182,6 +183,17 @@ class Bullet(pg.sprite.Sprite):
 
         if pg.time.get_ticks() - self.spawn_time > BULLET_LIFETIME:
             self.kill()
+            # check if hits zombie
+        mobs_hits = pg.sprite.spritecollide(self, self.game.mobs, False, pg.sprite.collide_mask)
+        if mobs_hits:
+            self.game.all_sprites.remove(self)
+            self.game.bullets.remove(self)
+        for hitMob in mobs_hits:
+            hitMob.take_hit(BULLET_DAMAGE)
+        # check if hits wall
+        if pg.sprite.spritecollide(self, self.game.walls, False, pg.sprite.collide_rect):
+            self.game.all_sprites.remove(self)
+            self.game.bullets.remove(self)
 
 
 class Wall(pg.sprite.Sprite):
