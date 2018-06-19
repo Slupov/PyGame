@@ -66,8 +66,8 @@ class Engine:
         pg.display.set_caption(TITLE)
         self.clock = pg.time.Clock()
         self.load_data()
-        self.mobs=None
-        self.walls=None
+        self.mobs = None
+        self.walls = None
 
     def load_data(self):
         load_images()
@@ -83,10 +83,16 @@ class Engine:
         # Create walls group and add all walls from their layer
         self.walls = pg.sprite.Group()
         wall_layer = self.map.game_map.get_layer_by_name('walls')
+        items_layer = self.map.game_map.get_layer_by_name('items')
 
         for x, y, image in wall_layer:
             if image:
-                surf_img = self.map.game_map.get_tile_image(x, y, 1)
+                surf_img = self.map.game_map.get_tile_image(x, y, WALLS_IMAGE_LAYER_INDEX)
+                wall = Wall(x, y, surf_img)
+                self.walls.add(wall)
+        for x, y, image in items_layer:
+            if image:
+                surf_img = self.map.game_map.get_tile_image(x, y, ITEMS_IMAGE_LAYER_INDEX)
                 wall = Wall(x, y, surf_img)
                 self.walls.add(wall)
 

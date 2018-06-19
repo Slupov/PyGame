@@ -23,6 +23,7 @@ def load_player_images():
 
 class Player(SpriteEntity):
     imgScaleFactor = nWidth / PLAYER_IMG_WIDTH
+    maskScaleFactor = nWidth / 70
 
     def __init__(self, game, x, y):
         super(Player, self).__init__(game, x, y)
@@ -31,6 +32,7 @@ class Player(SpriteEntity):
         self.staminaLossRate = PLAYER_RATES[STAMINA_LOSS]
         self.staminaRegenerateRate = PLAYER_RATES[STAMINA_REGEN]
         self.last_shot = 0
+        self.hit_rect = None
         self.initImages()
         self.setState(SpriteState.IDLE)
 
@@ -40,6 +42,8 @@ class Player(SpriteEntity):
         self.scaledSize = (PLAYER_IMG_WIDTH, int(nHeight / self.imgScaleFactor))
         self.image = pg.transform.scale(self.imageOriginal, self.scaledSize)
         self.rect = self.image.get_rect()
+        self.hit_rect = PLAYER_HIT_RECT
+        self.hit_rect.center = self.rect.center
         self.mask = pg.mask.from_surface(self.image)
 
     def setState(self, state):
@@ -66,12 +70,6 @@ class Player(SpriteEntity):
                 # if no hits were blown on that mob
                 if playerMobHit:
                     mob.take_hit(5)
-
-    def wall_collision(self):
-        # for wall in self.game.walls:
-        if pg.sprite.spritecollide(self, self.game.walls, False, pg.sprite.collide_mask):
-            self.pos -= self.velocity * self.game.dt
-            self.rect.center = self.pos
 
     def get_keys(self):
         self.velocity = vec(0, 0)
@@ -122,18 +120,19 @@ class Player(SpriteEntity):
         self.image = pg.transform.rotate(pg.transform.
                                          scale(self.imageOriginal, self.scaledSize), self.rot)
         self.mask = pg.mask.from_surface(self.image)
-
         self.rect = self.image.get_rect()
+        self.rect.center = self.pos
         self.pos += self.velocity * self.game.dt
-
+        self.hit_rect.centerx = self.pos.x
+        self.collide_with_walls(self, self.game.walls, 'x')
+        self.hit_rect.centery = self.pos.y
+        self.collide_with_walls(self, self.game.walls, 'y')
+        self.rect.center = self.hit_rect.center
         # regenerate stamina
         if self.state != SpriteState.RUN:
             self.regenerate_stamina()
             if self.stamina >= PLAYER_STAMINA:
                 self.stamina = PLAYER_STAMINA
-
-        self.rect.center = self.pos
-        self.wall_collision()
 
     def die(self):
         self.game.all_sprites.remove(self)

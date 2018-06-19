@@ -1,6 +1,7 @@
 from random import uniform
-
+import math
 from Settings import *
+from Tilemap import collide_hit_rect
 
 vec = pg.math.Vector2
 
@@ -137,8 +138,25 @@ class SpriteEntity(pg.sprite.Sprite):
             self.last_stamina_reg = now
             self.stamina += 1
 
-    def wall_collision(self):
-        pass
+    def collide_with_walls(self, sprite, group, dir):
+        if dir == 'x':
+            hits = pg.sprite.spritecollide(sprite, group, False, collide_hit_rect)
+            if hits:
+                if hits[0].rect.centerx > sprite.hit_rect.centerx:
+                    sprite.pos.x = hits[0].rect.left - sprite.hit_rect.width / 2
+                if hits[0].rect.centerx < sprite.hit_rect.centerx:
+                    sprite.pos.x = hits[0].rect.right + sprite.hit_rect.width / 2
+                sprite.velocity.x = 0
+                sprite.hit_rect.centerx = sprite.pos.x
+        if dir == 'y':
+            hits = pg.sprite.spritecollide(sprite, group, False, collide_hit_rect)
+            if hits:
+                if hits[0].rect.centery > sprite.hit_rect.centery:
+                    sprite.pos.y = hits[0].rect.top - sprite.hit_rect.height / 2
+                if hits[0].rect.centery < sprite.hit_rect.centery:
+                    sprite.pos.y = hits[0].rect.bottom + sprite.hit_rect.height / 2
+                sprite.velocity.y = 0
+                sprite.hit_rect.centery = sprite.pos.y
 
     def take_hit(self, damage):
         self.health -= damage
@@ -173,7 +191,5 @@ class Wall(pg.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.x = x
         self.y = y
-
         self.rect.x = x * TILESIZE
         self.rect.y = y * TILESIZE
-        self.mask = pg.mask.from_surface(self.image)
