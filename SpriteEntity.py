@@ -26,7 +26,7 @@ class SpriteEntity(pg.sprite.Sprite):
         self.last_frame_change = 0  # tick when last frame change happened
 
         self.rect = None
-
+        self.mask = None
         self.pos = vec(x, y) * TILESIZE
         self.rot = 0
 
@@ -72,6 +72,38 @@ class SpriteEntity(pg.sprite.Sprite):
     def update(self):
         pass
 
+    def collision_normal(self, left_mask, right_mask, left_pos, right_pos):
+
+        def vadd(x, y):
+            return [x[0] + y[0], x[1] + y[1]]
+
+        def vsub(x, y):
+            return [x[0] - y[0], x[1] - y[1]]
+
+        def vdot(x, y):
+            return x[0] * y[0] + x[1] * y[1]
+
+        offset = list(map(int, vsub(left_pos, right_pos)))
+
+        overlap = left_mask.overlap_area(right_mask, offset)
+
+        if overlap == 0:
+            return
+
+        """Calculate collision normal"""
+
+        nx = (left_mask.overlap_area(right_mask, (offset[0] + 1, offset[1])) -
+              left_mask.overlap_area(right_mask, (offset[0] - 1, offset[1])))
+        ny = (left_mask.overlap_area(right_mask, (offset[0], offset[1] + 1)) -
+              left_mask.overlap_area(right_mask, (offset[0], offset[1] - 1)))
+        if nx == 0 and ny == 0:
+            """One sprite is inside another"""
+            return
+
+        n = [nx, ny]
+
+        return n
+
     def regenerate_stamina(self):
         now = pg.time.get_ticks()
         if now - self.last_stamina_reg > self.staminaRegenerateRate:
@@ -115,6 +147,6 @@ class Wall(pg.sprite.Sprite):
         self.x = x
         self.y = y
 
-        self.rect.x = x*TILESIZE
-        self.rect.y = y*TILESIZE
+        self.rect.x = x * TILESIZE
+        self.rect.y = y * TILESIZE
         self.mask = pg.mask.from_surface(self.image)

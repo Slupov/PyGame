@@ -92,11 +92,12 @@ MOB_KNOCKBACK = 20
 MOB_WALK_RATE = 10
 MOB_RUN_RATE = 10
 
+
 MOB_RATES = {SpriteState.IDLE: 50,
              SpriteState.WALK: 50,
              SpriteState.RUN: 10,
              SpriteState.ATTACK: 10,
-             SpriteState.DEAD: 10,
+             SpriteState.DEAD: 70,
              STAMINA_REGEN: 100,
              STAMINA_LOSS: 5}
 

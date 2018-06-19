@@ -66,6 +66,8 @@ class Engine:
         pg.display.set_caption(TITLE)
         self.clock = pg.time.Clock()
         self.load_data()
+        self.mobs=None
+        self.walls=None
 
     def load_data(self):
         load_images()

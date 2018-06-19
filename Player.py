@@ -31,7 +31,6 @@ class Player(SpriteEntity):
         self.staminaLossRate = PLAYER_RATES[STAMINA_LOSS]
         self.staminaRegenerateRate = PLAYER_RATES[STAMINA_REGEN]
         self.last_shot = 0
-        self.mask = None
 
     def initImages(self):
         self.images = playerImages
@@ -39,8 +38,6 @@ class Player(SpriteEntity):
         self.scaledSize = (PLAYER_IMG_WIDTH, int(nHeight / self.imgScaleFactor))
         self.image = pg.transform.scale(self.imageOriginal, self.scaledSize)
         self.rect = self.image.get_rect()
-        self.collideRect = pg.rect.Rect((0, 0), (50, 50))
-        self.collideRect.midbottom = self.rect.midbottom
         self.mask = pg.mask.from_surface(self.image)
 
     def setState(self, state):
@@ -69,17 +66,15 @@ class Player(SpriteEntity):
                 # if no hits were blown on that mob
                 if playerMobHit:
                     mob.take_hit(5)
-                    print("Player attacked mob")
 
     def wall_collision(self):
         # for wall in self.game.walls:
-        if pg.sprite.spritecollide(self, self.game.walls, False, pg.sprite.collide_rect):
+        if pg.sprite.spritecollide(self, self.game.walls, False, pg.sprite.collide_mask):
             self.pos -= self.velocity * self.game.dt
             self.rect.center = self.pos
-            self.collideRect.midbottom = self.rect.midbottom
+
 
     def get_keys(self):
-        self.rot_speed = 0
         self.velocity = vec(0, 0)
         keys = pg.key.get_pressed()
 
@@ -116,7 +111,7 @@ class Player(SpriteEntity):
                 pos = self.pos + BARREL_OFFSET.rotate(-self.rot)
                 Bullet(self.game, pos, dir)
                 self.velocity = vec(-KICKBACK, 0).rotate(-self.rot)
-
+        # print(self.rot)
         self.handleState()
         self.image = pg.transform.scale(self.imageOriginal, self.scaledSize)
 
@@ -137,5 +132,4 @@ class Player(SpriteEntity):
                 self.stamina = PLAYER_STAMINA
 
         self.rect.center = self.pos
-        self.collideRect.midbottom = self.rect.midbottom
         self.wall_collision()

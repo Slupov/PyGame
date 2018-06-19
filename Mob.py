@@ -45,10 +45,10 @@ class Mob(SpriteEntity):
         self.stamina = MOB_STAMINA
         self.staminaLossRate = MOB_RATES[STAMINA_LOSS]
         self.staminaRegenerateRate = MOB_RATES[STAMINA_REGEN]
-
         self.initImages()
         self.last_shot = 0
         self.spawn()
+        self.deathFrames = 0
         self.roamRect = pg.Rect(self.pos, (self.roamRectW, self.roamRectW))
 
     def initImages(self):
@@ -60,6 +60,7 @@ class Mob(SpriteEntity):
         self.imageOriginal = self.images[self.state.name][self.frameIdx]
         self.scaledSize = (MOB_IMG_WIDTH, int(nHeight / self.imgScaleFactor))
         self.image = pg.transform.scale(self.imageOriginal, self.scaledSize)
+        self.mask = pg.mask.from_surface(self.image)
 
     def spawn(self):
         x = randint(0, self.game.map_rect.width / TILESIZE)
@@ -84,14 +85,15 @@ class Mob(SpriteEntity):
             self.frameIdx = (self.frameIdx + 1) % self.stateSpritesCount
             self.setFrame(self.frameIdx)
             self.image = pg.transform.scale(self.imageOriginal, self.scaledSize)
+            self.mask = pg.mask.from_surface(self.image)
 
         # check for attack on mob
         if self.state == SpriteState.ATTACK:
             playerMobHit = pg.sprite.collide_mask(self.game.player, self)
-            print("Mob attacked player")
 
     def update(self):
         self.image = pg.transform.rotate(pg.transform.scale(self.imageOriginal, self.scaledSize), self.rot)
+        self.mask = pg.mask.from_surface(self.image)
 
         self.rect = self.image.get_rect()
         self.rect.center = self.pos
@@ -104,7 +106,15 @@ class Mob(SpriteEntity):
         self.handleState()
 
         self.image = pg.transform.scale(self.imageOriginal, self.scaledSize)
+        self.mask = pg.mask.from_surface(self.image)
 
+        # check if dead
+        if self.state == SpriteState.DEAD:
+            self.deathFrames += 1
+            if self.deathFrames == MOB_STATES_SPRITE_CNT[self.state]:
+                self.game.mobs.remove(self)
+                self.game.all_sprites.remove(self)
+            return
         # regenerate stamina
         if self.state != SpriteState.RUN:
             self.regenerate_stamina()
@@ -127,7 +137,9 @@ class Mob(SpriteEntity):
         super(Mob, self).take_hit(damage)
         # add kickback
         kickback = 200
-        self.velocity = vec(-kickback, 0).rotate(-self.rot)
+        kbVec = self.collision_normal(self.game.player.mask, self.mask, self.game.player.pos, self.pos)
+        if kbVec:
+            self.velocity = vec(kbVec[0] * 2, kbVec[1] * 2).rotate(-self.rot)
 
         if self.health == 0:
             self.setState(SpriteState.DEAD)
