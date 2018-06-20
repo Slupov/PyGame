@@ -115,9 +115,6 @@ class Player(SpriteEntity):
         elif keys[pg.K_q]:
             self.setState(SpriteState.ATTACK)
 
-        elif keys[pg.K_z]:
-            self.setState(SpriteState.DEAD)
-
         if keys[pg.K_SPACE]:
             now = pg.time.get_ticks()
             if now - self.last_shot > BULLET_RATE:

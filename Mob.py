@@ -102,7 +102,7 @@ class Mob(SpriteEntity):
         super(Mob, self).handleState()
 
         if (self.state == SpriteState.WALK or self.state == SpriteState.IDLE) and abs(
-                self.pos.x - self.game.player.pos.x) > 5:
+                self.pos.x - self.game.player.pos.x) >5:
             if self.walkDirection == -1:
                 self.image = pg.transform.flip(self.image, True, False)
                 self.mask = pg.mask.from_surface(self.image)
@@ -144,7 +144,6 @@ class Mob(SpriteEntity):
                 self.chase_and_attack_player()
         else:
             self.setState(SpriteState.WALK)
-
             collide = pg.sprite.spritecollideany(self, self.game.walls)
             if collide:
                 if collide.rect.x < self.pos.x:
@@ -153,11 +152,11 @@ class Mob(SpriteEntity):
                 else:
                     self.walkDirection = -1
                     self.roamRect.x = self.roamRect.x - (self.roamRect.width - (collide.rect.x - self.roamRect.x))
-
-            if self.rect.x > self.roamRect.x + self.roamRect.width:
-                self.walkDirection = -1
-            elif self.rect.x <= self.roamRect.x:
-                self.walkDirection = 1
+            else:
+                if self.rect.x > self.roamRect.x + self.roamRect.width:
+                    self.walkDirection = -1
+                elif self.rect.x <= self.roamRect.x:
+                    self.walkDirection = 1
 
         self.velocity *= self.walkDirection
 
