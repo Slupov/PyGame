@@ -1,6 +1,3 @@
-# @brief
-# @date 17.06.18
-# @author Stoyan Lupov
 from SpriteEntity import *
 from random import randint
 from PIL import Image
@@ -40,11 +37,12 @@ class Mob(SpriteEntity):
     def __init__(self, game):
         super(Mob, self).__init__(game, 0, 0)
         self.gender = self.genders[randint(0, 1)]
+        self.rates = MOB_RATES
 
         self.health = MOB_HEALTH
         self.stamina = MOB_STAMINA
-        self.staminaLossRate = MOB_RATES[STAMINA_LOSS]
-        self.staminaRegenerateRate = MOB_RATES[STAMINA_REGEN]
+        self.staminaLossRate = self.rates[STAMINA_LOSS]
+        self.staminaRegenerateRate = self.rates[STAMINA_REGEN]
         self.initImages()
         self.last_shot = 0
         self.roamRect = None
@@ -67,23 +65,28 @@ class Mob(SpriteEntity):
 
     def spawn(self):
         rightPos = False
+
         x = None
         y = None
+
         while not rightPos:
             x = randint(0, self.game.map_rect.width / TILESIZE)
             y = randint(0, self.game.map_rect.height / TILESIZE)
-            # if y
-            # TODO Stoyan Lupov 16-06-2018 Check if this lands on a wall or other object and generate again if so
 
             self.pos = vec(x, y) * TILESIZE
             self.rect.center = self.pos
+
             if not pg.sprite.spritecollide(self, self.game.walls, False, pg.sprite.collide_rect):
                 rightPos = True
 
-        self.roamRect = pg.Rect((x * TILESIZE - self.roamRectW / 2, y * TILESIZE - self.roamRectH / 2), (self.roamRectW,
-                                                                                                         self.roamRectW))
+        self.roamRect = pg.Rect(
+            (x * TILESIZE - self.roamRectW / 2, y * TILESIZE - self.roamRectH / 2),
+            (self.roamRectW, self.roamRectW))
 
     def setState(self, state):
+        if self.state == SpriteState.DEAD:
+            return
+
         self.stateSpritesCount = MOB_STATES_SPRITE_CNT[state]
         super(Mob, self).setState(state)
 
@@ -91,6 +94,7 @@ class Mob(SpriteEntity):
 
         if self.state == SpriteState.WALK:
             self.velocity = vec(MOB_SPEED, 0).rotate(-self.rot)
+
         elif self.state == SpriteState.RUN:
             self.velocity = vec(MOB_RUN_SPEED, 0).rotate(-self.rot)
 
@@ -102,12 +106,17 @@ class Mob(SpriteEntity):
             if self.walkDirection == -1:
                 self.image = pg.transform.flip(self.image, True, False)
                 self.mask = pg.mask.from_surface(self.image)
-            # check for attack on player
+
+        # check for attack on player
         if self.state == SpriteState.ATTACK:
             playerMobHit = pg.sprite.collide_mask(self.game.player, self)
 
-    def update(self):
+            if playerMobHit:
+                if self.game.player.health <= 0:
+                    return
+                self.game.player.take_hit(MOB_ATTACK_DAMAGE, self)
 
+    def update(self):
         self.rect = self.image.get_rect()
         self.rect.center = self.pos
         self.pos += self.velocity * self.game.dt
@@ -128,25 +137,30 @@ class Mob(SpriteEntity):
             self.chase_and_attack_player()
         else:
             self.setState(SpriteState.WALK)
+
             if self.pos.x > self.roamRect.x + self.roamRect.width:
-                # self.imageOriginal = pg.transform.flip(self.image, True, False)
                 self.walkDirection = -1
+
             elif self.pos.x <= self.roamRect.x:
                 self.walkDirection = 1
+
         self.velocity *= self.walkDirection
 
     def chase_and_attack_player(self):
 
         if pg.sprite.collide_mask(self, self.game.player):
-            self.setState(SpriteState.IDLE)
+            self.setState(SpriteState.ATTACK)
         else:
             self.setState(SpriteState.WALK)
+
             if self.pos.x > self.game.player.pos.x:
                 self.pos.x -= 1
                 self.walkDirection = -1
+
             elif self.pos.x < self.game.player.pos.x:
                 self.pos.x += 1
                 self.walkDirection = 1
+
             if self.pos.y < self.game.player.pos.y:
                 self.pos.y += 1
             elif self.pos.y > self.game.player.pos.y:
@@ -154,17 +168,17 @@ class Mob(SpriteEntity):
 
             self.roamRect.center = self.pos
             self.rect.center = self.pos
-            self.mask = pg.mask.from_surface(self.image)
+            # self.mask = pg.mask.from_surface(self.image)
 
-    def take_hit(self, damage):
-        super(Mob, self).take_hit(damage)
+    def take_hit(self, damage, hitting_sprite):
+        super(Mob, self).take_hit(damage, hitting_sprite)
 
         # add kickback
-        kbVec = self.collision_normal(self.game.player.mask, self.mask, self.game.player.pos, self.pos)
+        kbVec = self.collision_normal(hitting_sprite.mask, self.mask, hitting_sprite.pos, self.pos)
         if kbVec:
             self.velocity = vec(kbVec[0] * 2, kbVec[1] * 2).rotate(-self.rot)
 
-        if self.health == 0:
+        if self.health <= 0:
             self.setState(SpriteState.DEAD)
 
     def draw_health(self):

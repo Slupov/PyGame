@@ -1,6 +1,3 @@
-# @brief
-# @date 17.06.18
-# @author Stoyan Lupov
 from SpriteEntity import *
 from PIL import Image
 
@@ -22,15 +19,15 @@ def load_player_images():
 
 
 class Player(SpriteEntity):
-    imgScaleFactor = nWidth / PLAYER_IMG_WIDTH
-    maskScaleFactor = nWidth / 70
+    imgScaleFactor = nHeight / PLAYER_IMG_HEIGHT
 
     def __init__(self, game, x, y):
         super(Player, self).__init__(game, x, y)
+        self.rates = PLAYER_RATES
         self.health = PLAYER_HEALTH
         self.stamina = PLAYER_STAMINA
-        self.staminaLossRate = PLAYER_RATES[STAMINA_LOSS]
-        self.staminaRegenerateRate = PLAYER_RATES[STAMINA_REGEN]
+        self.staminaLossRate = self.rates[STAMINA_LOSS]
+        self.staminaRegenerateRate = self.rates[STAMINA_REGEN]
         self.last_shot = 0
         self.hit_rect = None
         self.initImages()
@@ -40,7 +37,7 @@ class Player(SpriteEntity):
     def initImages(self):
         self.images = playerImages
         self.imageOriginal = self.images[self.state.name][self.frameIdx]
-        self.scaledSize = (PLAYER_IMG_WIDTH, int(nHeight / self.imgScaleFactor))
+        self.scaledSize = (int(nWidth / self.imgScaleFactor), PLAYER_IMG_HEIGHT)
         self.image = pg.transform.scale(self.imageOriginal, self.scaledSize)
         self.rect = self.image.get_rect()
         self.hit_rect = PLAYER_HIT_RECT
@@ -48,8 +45,12 @@ class Player(SpriteEntity):
         self.mask = pg.mask.from_surface(self.image)
 
     def setState(self, state):
+        if self.state == SpriteState.DEAD:
+            return
+
         self.stateSpritesCount = PLAYER_STATES_SPRITE_CNT[state]
         super(Player, self).setState(state)
+
         self.image = pg.transform.scale(self.imageOriginal, self.scaledSize)
 
         if self.state == SpriteState.WALK:
@@ -57,6 +58,7 @@ class Player(SpriteEntity):
                 self.velocity = vec(PLAYER_SPEED, 0).rotate(-self.rot)
             else:
                 self.velocity = vec(-PLAYER_SPEED / 2, 0).rotate(-self.rot)
+
         elif self.state == SpriteState.RUN:
             self.velocity = vec(PLAYER_RUN_SPEED, 0).rotate(-self.rot)
 
@@ -74,10 +76,12 @@ class Player(SpriteEntity):
                         return
                     elif mob.health - PLAYER_ATTACK_DAMAGE <= 0:
                         self.points += PLAYER_POINTS_PER_MOB_KILLED
-                    mob.take_hit(PLAYER_ATTACK_DAMAGE)
+                    mob.take_hit(PLAYER_ATTACK_DAMAGE, self)
 
     def get_keys(self):
-        self.velocity = vec(0, 0)
+        if self.state == SpriteState.DEAD:
+            return
+
         keys = pg.key.get_pressed()
 
         if keys[pg.K_LEFT] or keys[pg.K_a]:
@@ -118,10 +122,12 @@ class Player(SpriteEntity):
                 Bullet(self.game, pos, dir)
                 self.velocity = vec(-KICKBACK, 0).rotate(-self.rot)
 
+    def update(self):
+        self.velocity = vec(0,0)
+
+        self.get_keys()
         self.handleState()
 
-    def update(self):
-        self.get_keys()
         self.image = pg.transform.rotate(pg.transform.
                                          scale(self.imageOriginal, self.scaledSize), self.rot)
         self.mask = pg.mask.from_surface(self.image)
@@ -133,11 +139,23 @@ class Player(SpriteEntity):
         self.hit_rect.centery = self.pos.y
         self.collide_with_walls(self, self.game.walls, 'y')
         self.rect.center = self.hit_rect.center
+
         # regenerate stamina
         if self.state != SpriteState.RUN:
             self.regenerate_stamina()
             if self.stamina >= PLAYER_STAMINA:
                 self.stamina = PLAYER_STAMINA
+
+    def take_hit(self, damage, hitting_sprite):
+        super(Player, self).take_hit(damage, hitting_sprite)
+
+        # add kickback
+        kbVec = self.collision_normal(hitting_sprite.mask, self.mask, hitting_sprite.pos, self.pos)
+        if kbVec:
+            self.velocity = vec(kbVec[0] * 2, kbVec[1] * 2).rotate(-self.rot)
+
+        if self.health <= 0:
+            self.setState(SpriteState.DEAD)
 
     def die(self):
         self.game.all_sprites.remove(self)

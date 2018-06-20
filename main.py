@@ -78,7 +78,6 @@ class Engine:
         self.walls = None
         self.bullets = None
 
-
     def load_data(self):
         load_images()
         self.map = TiledMap(RESOURCE_FOLDER + '/maps/level1.tmx')
@@ -119,9 +118,11 @@ class Engine:
         self.camera = Camera(self.map.width, self.map.height)
 
     def run(self):
-        # game loop - set self.playing = False to end the game
+        # game loop - set self.running = False to end the game
         self.running = True
         while self.running:
+            # update the clock once per engine cycle
+            # delays to keep the game running slower than the given ticks per second in order to limit the runtime speed
             self.dt = self.clock.tick(FPS) / 1000.0  # fix for Python 2.x
             self.handleEvent()
             self.update()
@@ -147,6 +148,10 @@ class Engine:
         self.all_sprites.update()
         self.camera.update(self.player)
 
+        if self.player.health <= 0:
+            if self.player.frameIdx == PLAYER_STATES_SPRITE_CNT[self.player.state] - 2:
+                self.running = False
+
     def draw(self):
         # draw map
         self.screen.blit(self.map_img, self.camera.apply_rect(self.map_rect))
@@ -171,13 +176,48 @@ class Engine:
         pass
 
     def show_go_screen(self):
-        pass
+        self.draw()
+
+        youDiedStr = "You died with {0} points".format(self.player.points)
+        messageStr = "Press space bar to play again"
+
+        goScreenFont = pg.font.SysFont('Comic Sans MS', 50)
+
+        text_width, text_height = goScreenFont.size(youDiedStr)
+        text_width2, text_height2 = goScreenFont.size(messageStr)
+
+        text_surface = goScreenFont.render(youDiedStr, True, WHITE)
+        text_surface2 = goScreenFont.render(messageStr, True, WHITE)
+
+        y = (SCREEN_HEIGHT - text_height) / 2
+        self.screen.blit(text_surface, ((SCREEN_WIDTH - text_width) / 2, y))
+        self.screen.blit(text_surface2, ((SCREEN_WIDTH - text_width2) / 2, y + text_height + 10))
+
+        pg.display.flip()
+
+        done = False
+        while not done:
+            for event in pg.event.get():
+                if event.type == pg.QUIT:
+                    self.running = False
+                    done = True
+                    
+                if event.type == pg.KEYDOWN:
+                    if event.key == pg.K_SPACE:
+                        done = True
+                        self.running = True
+
+            self.clock.tick(FPS)
+
+        return self.running
 
 
 # create the game object
 engine = Engine()
 engine.show_start_screen()
+
 while True:
     engine.new()
     engine.run()
-    engine.show_go_screen()
+    if not engine.show_go_screen():
+        break

@@ -1,5 +1,4 @@
 from random import uniform
-import math
 from Settings import *
 from Tilemap import collide_hit_rect
 
@@ -8,18 +7,30 @@ vec = pg.math.Vector2
 
 class SpriteEntity(pg.sprite.Sprite):
     def __init__(self, game, x, y):
+        """
+            Constructs a sprite entity object and initializes it with starting values
+            :param game: a reference to the engine through which sprite groups are obtained
+            (for collision detection)
+        """
+
         self.game = game
         self.groups = game.all_sprites
 
         pg.sprite.Sprite.__init__(self, self.groups)
 
+        # sprite variables
         self.stateSpritesCount = 0
-
         self.state = SpriteState.IDLE
 
+        self.rates = {}
+
+        # image variables
         self.images = {}
         self.imageOriginal = None
         self.image = None
+
+        self.rect = None
+        self.mask = None
 
         # current frame of state animation
         self.frameIdx = 0
@@ -27,25 +38,29 @@ class SpriteEntity(pg.sprite.Sprite):
         # tick when last frame change happened
         self.last_frame_change = 0
 
-        self.rect = None
-        self.mask = None
+        # physics variables
         self.pos = vec(x, y) * TILESIZE
         self.rot = 0
-
         self.velocity = vec(0, 0)
+
+        # statistics variables
         self.health = 0
         self.stamina = 0
+
         self.staminaLossRate = 0
         self.staminaRegenerateRate = 0
         self.last_stamina_reg = 0
 
         # 1 when walking forwards and -1 when backwards
         self.walkDirection = 1
-
         self.scaledSize = (0, 0)
 
-    # one has to call a scaling function after setFrame
-    def setFrame(self, frame, *boolFlipped):
+    def setFrame(self, frame):
+        """
+            Changes the image of the sprite by a given frame index. Takes into account
+            the state the object is currently in
+            :param frame: the next frame animation index
+        """
 
         frame = frame % self.stateSpritesCount
         self.frameIdx = frame
@@ -53,6 +68,9 @@ class SpriteEntity(pg.sprite.Sprite):
         self.image = self.imageOriginal
 
     def setState(self, state):
+        """
+            Sets the state of the sprite
+        """
         if self.state != state:
             self.setFrame(0)
             self.state = state
@@ -60,16 +78,10 @@ class SpriteEntity(pg.sprite.Sprite):
             if state == SpriteState.IDLE:
                 self.velocity = vec(0, 0).rotate(-self.rot)
 
-    def get_keys(self):
-        pass
-
-    def updateVelocity(self):
-        pass
-
-    def initImages(self):
-        pass
-
     def handleState(self):
+        """
+            Applies certain logic depending on the sprite's state
+        """
         if self.state == SpriteState.RUN:
             self.stamina -= self.staminaLossRate
 
@@ -77,13 +89,13 @@ class SpriteEntity(pg.sprite.Sprite):
         diff = now - self.last_frame_change
 
         # handle state animation
-        if diff > MOB_RATES[self.state]:
+        if diff > self.rates[self.state]:
             self.last_frame_change = now
 
             if self.state != SpriteState.DEAD:
                 self.frameIdx = (self.frameIdx + 1) % self.stateSpritesCount
             else:
-                self.velocity = vec(0,0)
+                self.velocity = vec(0, 0)
                 self.frameIdx += 1
 
                 # reached last death frame idx
@@ -96,15 +108,10 @@ class SpriteEntity(pg.sprite.Sprite):
             self.image = pg.transform.scale(self.imageOriginal, self.scaledSize)
             self.mask = pg.mask.from_surface(self.image)
 
-
-    def update(self):
-        pass
-
-    def die(self):
-        pass
-
     def collision_normal(self, left_mask, right_mask, left_pos, right_pos):
-
+        """
+            Calculates the direction of the kickback after a collision
+        """
         def vadd(x, y):
             return [x[0] + y[0], x[1] + y[1]]
 
@@ -132,10 +139,12 @@ class SpriteEntity(pg.sprite.Sprite):
             return
 
         n = [nx, ny]
-
         return n
 
     def regenerate_stamina(self):
+        """
+            Regenerates stamina after a certain rate (in ticks) has passed
+        """
         now = pg.time.get_ticks()
         if now - self.last_stamina_reg > self.staminaRegenerateRate:
             self.last_stamina_reg = now
@@ -161,9 +170,29 @@ class SpriteEntity(pg.sprite.Sprite):
                 sprite.velocity.y = 0
                 sprite.hit_rect.centery = sprite.pos.y
 
-    def take_hit(self, damage):
+    def take_hit(self, damage, hitting_sprite):
+        """
+            Lowers a sprites health
+            :param hitting_sprite - the sprite that hit self
+        """
         if self.state != SpriteState.DEAD:
             self.health -= damage
+
+    # ----------------- "abstract" functions -----------------
+    def get_keys(self):
+        pass
+
+    def updateVelocity(self):
+        pass
+
+    def initImages(self):
+        pass
+
+    def update(self):
+        pass
+
+    def die(self):
+        pass
 
 
 class Bullet(pg.sprite.Sprite):
@@ -188,11 +217,14 @@ class Bullet(pg.sprite.Sprite):
             self.kill()
             # check if hits zombie
         mobs_hits = pg.sprite.spritecollide(self, self.game.mobs, False, pg.sprite.collide_mask)
+
         if mobs_hits:
             self.game.all_sprites.remove(self)
             self.game.bullets.remove(self)
+
         for hitMob in mobs_hits:
-            hitMob.take_hit(BULLET_DAMAGE)
+            hitMob.take_hit(BULLET_DAMAGE, self)
+
         # check if hits wall
         if pg.sprite.spritecollide(self, self.game.walls, False, pg.sprite.collide_rect):
             self.game.all_sprites.remove(self)

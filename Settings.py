@@ -74,7 +74,7 @@ PLAYER_STATES_SPRITE_CNT = {SpriteState.IDLE: 10,
                             SpriteState.JUMPATTACK: 10,
                             SpriteState.DEAD: 10, }
 
-PLAYER_IMG_WIDTH = 100
+PLAYER_IMG_HEIGHT = 120
 
 # Gun settings
 BULLET_IMG = RESOURCE_FOLDER + '/bullet.png'
@@ -91,6 +91,7 @@ MOB_RUN_SPEED = 300
 MOB_ROT_SPEED = 2
 MOB_HIT_RECT = pg.Rect(0, 0, 30, 30)
 MOB_HEALTH = 100
+MOB_ATTACK_DAMAGE = 0.5
 MOB_STAMINA = 100
 MOB_DAMAGE = 10
 MOB_KNOCKBACK = 20
@@ -101,7 +102,7 @@ MOB_RUN_RATE = 10
 MOB_RATES = {SpriteState.IDLE: 50,
              SpriteState.WALK: 50,
              SpriteState.RUN: 10,
-             SpriteState.ATTACK: 10,
+             SpriteState.ATTACK: 150,
              SpriteState.DEAD: 100,
              STAMINA_REGEN: 100,
              STAMINA_LOSS: 5}
