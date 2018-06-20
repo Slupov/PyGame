@@ -28,11 +28,13 @@ class Player(SpriteEntity):
         self.stamina = PLAYER_STAMINA
         self.staminaLossRate = self.rates[STAMINA_LOSS]
         self.staminaRegenerateRate = self.rates[STAMINA_REGEN]
-        self.last_shot = 0
         self.hit_rect = None
+
+        self.points = 0
+        self.last_shot = 0
+
         self.initImages()
         self.setState(SpriteState.IDLE)
-        self.points = 0
 
     def initImages(self):
         self.images = playerImages
@@ -79,6 +81,9 @@ class Player(SpriteEntity):
                     mob.take_hit(PLAYER_ATTACK_DAMAGE, self)
 
     def get_keys(self):
+        """
+            Reads user input and set states based on it
+        """
         if self.state == SpriteState.DEAD:
             return
 
@@ -123,7 +128,7 @@ class Player(SpriteEntity):
                 self.velocity = vec(-KICKBACK, 0).rotate(-self.rot)
 
     def update(self):
-        self.velocity = vec(0,0)
+        self.velocity = vec(0, 0)
 
         self.get_keys()
         self.handleState()
@@ -131,13 +136,16 @@ class Player(SpriteEntity):
         self.image = pg.transform.rotate(pg.transform.
                                          scale(self.imageOriginal, self.scaledSize), self.rot)
         self.mask = pg.mask.from_surface(self.image)
+
         self.rect = self.image.get_rect()
         self.rect.center = self.pos
         self.pos += self.velocity * self.game.dt
         self.hit_rect.centerx = self.pos.x
+
         self.collide_with_walls(self, self.game.walls, 'x')
         self.hit_rect.centery = self.pos.y
         self.collide_with_walls(self, self.game.walls, 'y')
+
         self.rect.center = self.hit_rect.center
 
         # regenerate stamina

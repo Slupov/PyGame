@@ -84,8 +84,6 @@ class Engine:
         self.map_img = self.map.make_map()
         self.map_rect = self.map_img.get_rect()
 
-        pass
-
     def new(self):
         # initialize all variables and do all the setup for a new game
         self.all_sprites = pg.sprite.Group()
@@ -201,7 +199,7 @@ class Engine:
                 if event.type == pg.QUIT:
                     self.running = False
                     done = True
-                    
+
                 if event.type == pg.KEYDOWN:
                     if event.key == pg.K_SPACE:
                         done = True

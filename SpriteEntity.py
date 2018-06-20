@@ -112,6 +112,7 @@ class SpriteEntity(pg.sprite.Sprite):
         """
             Calculates the direction of the kickback after a collision
         """
+
         def vadd(x, y):
             return [x[0] + y[0], x[1] + y[1]]
 
@@ -173,25 +174,29 @@ class SpriteEntity(pg.sprite.Sprite):
     def take_hit(self, damage, hitting_sprite):
         """
             Lowers a sprites health
+            :param damage: the amount of HP taken from the hit
             :param hitting_sprite - the sprite that hit self
         """
         if self.state != SpriteState.DEAD:
             self.health -= damage
 
     # ----------------- "abstract" functions -----------------
-    def get_keys(self):
-        pass
-
-    def updateVelocity(self):
-        pass
-
     def initImages(self):
+        """
+            Sets images dictionary to a previously loaded with resources dictionary
+        """
         pass
 
     def update(self):
+        """
+            Update internals based on current state
+        """
         pass
 
     def die(self):
+        """
+            Removes object from sprite groups
+        """
         pass
 
 
@@ -199,13 +204,16 @@ class Bullet(pg.sprite.Sprite):
     def __init__(self, engine, pos, dir):
         self.groups = engine.all_sprites, engine.bullets
         pg.sprite.Sprite.__init__(self, self.groups)
+
         self.game = engine
         self.image = pg.image.load(RESOURCE_FOLDER + "/bullet.png").convert_alpha()
+        self.mask = pg.mask.from_surface(self.image)
+
         self.rect = self.image.get_rect()
         self.pos = vec(pos)
         self.rect.center = pos
-        self.mask = pg.mask.from_surface(self.image)
         spread = uniform(-GUN_SPREAD, GUN_SPREAD)
+
         self.vel = dir.rotate(spread) * BULLET_SPEED
         self.spawn_time = pg.time.get_ticks()
 
@@ -215,7 +223,8 @@ class Bullet(pg.sprite.Sprite):
 
         if pg.time.get_ticks() - self.spawn_time > BULLET_LIFETIME:
             self.kill()
-            # check if hits zombie
+
+        # check if hits a zombie
         mobs_hits = pg.sprite.spritecollide(self, self.game.mobs, False, pg.sprite.collide_mask)
 
         if mobs_hits:
@@ -224,6 +233,9 @@ class Bullet(pg.sprite.Sprite):
 
         for hitMob in mobs_hits:
             hitMob.take_hit(BULLET_DAMAGE, self)
+
+            if hitMob.health <= 0:
+                self.game.player.points += PLAYER_POINTS_PER_MOB_KILLED_BULLET
 
         # check if hits wall
         if pg.sprite.spritecollide(self, self.game.walls, False, pg.sprite.collide_rect):
