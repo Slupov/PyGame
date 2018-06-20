@@ -33,8 +33,8 @@ def load_mob_images():
 
 class Mob(SpriteEntity):
     genders = ["female", "male"]
-    roamRectW = 500
-    roamRectH = 500
+    roamRectW = 300
+    roamRectH = 300
     imgScaleFactor = nWidth / MOB_IMG_WIDTH
 
     def __init__(self, game):
@@ -62,20 +62,31 @@ class Mob(SpriteEntity):
         self.imageOriginal = self.images[self.state.name][self.frameIdx]
         self.scaledSize = (MOB_IMG_WIDTH, int(nHeight / self.imgScaleFactor))
         self.image = pg.transform.scale(self.imageOriginal, self.scaledSize)
+        self.rect = self.image.get_rect()
         self.mask = pg.mask.from_surface(self.image)
 
     def spawn(self):
-        x = randint(0, self.game.map_rect.width / TILESIZE)
-        y = randint(0, self.game.map_rect.height / TILESIZE)
+        rightPos = False
+        x = None
+        y = None
+        while not rightPos:
+            x = randint(0, self.game.map_rect.width / TILESIZE)
+            y = randint(0, self.game.map_rect.height / TILESIZE)
+            # if y
+            # TODO Stoyan Lupov 16-06-2018 Check if this lands on a wall or other object and generate again if so
 
-        # TODO Stoyan Lupov 16-06-2018 Check if this lands on a wall or other object and generate again if so
-        self.pos = vec(x, y) * TILESIZE
+            self.pos = vec(x, y) * TILESIZE
+            self.rect.center = self.pos
+            if not pg.sprite.spritecollide(self, self.game.walls, False, pg.sprite.collide_rect):
+                rightPos = True
+
         self.roamRect = pg.Rect((x * TILESIZE - self.roamRectW / 2, y * TILESIZE - self.roamRectH / 2), (self.roamRectW,
                                                                                                          self.roamRectW))
 
     def setState(self, state):
         self.stateSpritesCount = MOB_STATES_SPRITE_CNT[state]
         super(Mob, self).setState(state)
+
         self.image = pg.transform.scale(self.imageOriginal, self.scaledSize)
 
         if self.state == SpriteState.WALK:
@@ -86,23 +97,23 @@ class Mob(SpriteEntity):
     def handleState(self):
         super(Mob, self).handleState()
 
-        # check for attack on player
+        if (self.state == SpriteState.WALK or self.state == SpriteState.IDLE) and abs(
+                self.pos.x - self.game.player.pos.x) > 5:
+            if self.walkDirection == -1:
+                self.image = pg.transform.flip(self.image, True, False)
+                self.mask = pg.mask.from_surface(self.image)
+            # check for attack on player
         if self.state == SpriteState.ATTACK:
             playerMobHit = pg.sprite.collide_mask(self.game.player, self)
 
     def update(self):
-        self.velocity = vec(0, 0)
 
         self.rect = self.image.get_rect()
         self.rect.center = self.pos
         self.pos += self.velocity * self.game.dt
 
         if self.state != SpriteState.DEAD:
-            # check if player is inside the roam rectangle
-            if self.roamRect.colliderect(self.game.player.rect):
-                self.chase_and_attack_player()
-            else:
-                self.roam()
+            self.roam()
 
         self.handleState()
 
@@ -112,20 +123,38 @@ class Mob(SpriteEntity):
             if self.stamina >= MOB_STAMINA:
                 self.stamina = MOB_STAMINA
 
-
     def roam(self):
-        # TODO Make Zombie walk back to its roam rect if it had been chasing the player outside it
-        self.setState(SpriteState.WALK)
-
-        # if self.rect.colliderect(self.roamRect):
-            # self.rot = randint(0, 360)
-            # self.image = pg.transform.rotate(pg.transform.
-            #                                  scale(self.imageOriginal, self.scaledSize), self.rot)
+        if self.roamRect.colliderect(self.game.player.rect):
+            self.chase_and_attack_player()
+        else:
+            self.setState(SpriteState.WALK)
+            if self.pos.x > self.roamRect.x + self.roamRect.width:
+                # self.imageOriginal = pg.transform.flip(self.image, True, False)
+                self.walkDirection = -1
+            elif self.pos.x <= self.roamRect.x:
+                self.walkDirection = 1
+        self.velocity *= self.walkDirection
 
     def chase_and_attack_player(self):
-        self.setState(SpriteState.IDLE)
-        print("PLAYER IS INSIDE ROAM RECT")
-        pass
+
+        if pg.sprite.collide_mask(self, self.game.player):
+            self.setState(SpriteState.IDLE)
+        else:
+            self.setState(SpriteState.WALK)
+            if self.pos.x > self.game.player.pos.x:
+                self.pos.x -= 1
+                self.walkDirection = -1
+            elif self.pos.x < self.game.player.pos.x:
+                self.pos.x += 1
+                self.walkDirection = 1
+            if self.pos.y < self.game.player.pos.y:
+                self.pos.y += 1
+            elif self.pos.y > self.game.player.pos.y:
+                self.pos.y -= 1
+
+            self.roamRect.center = self.pos
+            self.rect.center = self.pos
+            self.mask = pg.mask.from_surface(self.image)
 
     def take_hit(self, damage):
         super(Mob, self).take_hit(damage)

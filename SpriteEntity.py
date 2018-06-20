@@ -45,7 +45,8 @@ class SpriteEntity(pg.sprite.Sprite):
         self.scaledSize = (0, 0)
 
     # one has to call a scaling function after setFrame
-    def setFrame(self, frame):
+    def setFrame(self, frame, *boolFlipped):
+
         frame = frame % self.stateSpritesCount
         self.frameIdx = frame
         self.imageOriginal = self.images[self.state.name][frame]
@@ -82,6 +83,7 @@ class SpriteEntity(pg.sprite.Sprite):
             if self.state != SpriteState.DEAD:
                 self.frameIdx = (self.frameIdx + 1) % self.stateSpritesCount
             else:
+                self.velocity = vec(0,0)
                 self.frameIdx += 1
 
                 # reached last death frame idx
@@ -94,8 +96,6 @@ class SpriteEntity(pg.sprite.Sprite):
             self.image = pg.transform.scale(self.imageOriginal, self.scaledSize)
             self.mask = pg.mask.from_surface(self.image)
 
-    def handleEvent(self, event):
-        pass
 
     def update(self):
         pass
