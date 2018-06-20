@@ -117,6 +117,10 @@ class Mob(SpriteEntity):
                 self.game.player.take_hit(MOB_ATTACK_DAMAGE, self)
 
     def update(self):
+
+        if self.health <= 0:
+            self.setState(SpriteState.DEAD)
+
         self.rect = self.image.get_rect()
         self.rect.center = self.pos
         self.pos += self.velocity * self.game.dt
@@ -188,8 +192,6 @@ class Mob(SpriteEntity):
         if kbVec:
             self.velocity = vec(kbVec[0] * 2, kbVec[1] * 2).rotate(-self.rot)
 
-        if self.health <= 0:
-            self.setState(SpriteState.DEAD)
 
     def draw_health(self):
         if self.health > 60:

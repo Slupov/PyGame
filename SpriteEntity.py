@@ -233,8 +233,7 @@ class Bullet(pg.sprite.Sprite):
 
         for hitMob in mobs_hits:
             hitMob.take_hit(BULLET_DAMAGE, self)
-
-            if hitMob.health <= 0:
+            if hitMob.health <= 0 and hitMob.state != SpriteState.DEAD:
                 self.game.player.points += PLAYER_POINTS_PER_MOB_KILLED_BULLET
 
         # check if hits wall
