@@ -238,7 +238,7 @@ class Bullet(pg.sprite.Sprite):
                 self.game.player.points += PLAYER_POINTS_PER_MOB_KILLED_BULLET
 
         # check if hits wall
-        if pg.sprite.spritecollide(self, self.game.walls, False, pg.sprite.collide_rect):
+        if pg.sprite.spritecollide(self, self.game.player_obs, False, pg.sprite.collide_rect):
             self.game.all_sprites.remove(self)
             self.game.bullets.remove(self)
 

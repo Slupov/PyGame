@@ -134,20 +134,30 @@ class Mob(SpriteEntity):
 
     def roam(self):
         if self.roamRect.colliderect(self.game.player.rect):
-            self.chase_and_attack_player()
+            if pg.sprite.spritecollide(self, self.game.walls, False, pg.sprite.collide_rect):
+                self.velocity = vec(0, 0)
+            else:
+                self.chase_and_attack_player()
         else:
             self.setState(SpriteState.WALK)
 
-            if self.pos.x > self.roamRect.x + self.roamRect.width:
-                self.walkDirection = -1
+            collide = pg.sprite.spritecollideany(self, self.game.walls)
+            if collide:
+                if collide.rect.x < self.pos.x:
+                    self.walkDirection = 1
+                    self.roamRect.x = collide.rect.x + TILESIZE
+                else:
+                    self.walkDirection = -1
+                    self.roamRect.x = self.roamRect.x - (self.roamRect.width - (collide.rect.x - self.roamRect.x))
 
-            elif self.pos.x <= self.roamRect.x:
+            if self.rect.x > self.roamRect.x + self.roamRect.width:
+                self.walkDirection = -1
+            elif self.rect.x <= self.roamRect.x:
                 self.walkDirection = 1
 
         self.velocity *= self.walkDirection
 
     def chase_and_attack_player(self):
-
         if pg.sprite.collide_mask(self, self.game.player):
             self.setState(SpriteState.ATTACK)
         else:

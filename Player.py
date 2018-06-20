@@ -142,10 +142,9 @@ class Player(SpriteEntity):
         self.pos += self.velocity * self.game.dt
         self.hit_rect.centerx = self.pos.x
 
-        self.collide_with_walls(self, self.game.walls, 'x')
+        self.collide_with_walls(self, self.game.player_obs, 'x')
         self.hit_rect.centery = self.pos.y
-        self.collide_with_walls(self, self.game.walls, 'y')
-
+        self.collide_with_walls(self, self.game.player_obs, 'y')
         self.rect.center = self.hit_rect.center
 
         # regenerate stamina
